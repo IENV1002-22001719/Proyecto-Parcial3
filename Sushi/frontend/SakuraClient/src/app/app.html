@@ -1,0 +1,39 @@
+<div class="min-h-screen text-slate-800 antialiased selection:bg-pink-200 selection:text-pink-900 relative">
+    <div class="fixed inset-0 pointer-events-none z-1 opacity-45 bg-[radial-gradient(circle_at_10%_15%,rgba(255,185,200,0.55)_0%,transparent_35%)]"></div>
+    <div class="sakura-branches-pattern"></div>
+
+    <!-- MÓDULO LOGIN -->
+    <app-login *ngIf="loggedRole === ''" (onLoginSuccess)="handleLogin($event)"></app-login>
+
+    <!-- MÓDULO CLIENTE -->
+    <app-client *ngIf="loggedRole === 'client'" 
+                [loggedEmail]="loggedEmail" 
+                [products]="products" 
+                [rawMaterials]="rawMaterials"
+                [orders]="orders"
+                [users]="users"
+                [notificationLog]="notificationLog"
+                (onLogout)="handleLogout()" 
+                (onDataChange)="fetchBackendData()">
+    </app-client>
+
+    <!-- MÓDULO COCINA (Actualizado y sincronizado con órdenes y notificaciones) -->
+    <app-cocina *ngIf="loggedRole === 'kitchen'" 
+                [loggedEmail]="loggedEmail" 
+                [orders]="orders"
+                [notificationLog]="notificationLog"
+                (onLogout)="handleLogout()"
+                (onDataChange)="fetchBackendData()">
+    </app-cocina>
+
+    <!-- MÓDULO ADMINISTRADOR -->
+    <app-admin *ngIf="loggedRole === 'admin'" 
+               [loggedEmail]="loggedEmail" 
+               [rawMaterials]="rawMaterials" 
+               [products]="products" 
+               [orders]="orders"
+               [notificationLog]="notificationLog"
+               (onLogout)="handleLogout()"
+               (onDataChange)="fetchBackendData()">
+    </app-admin>
+</div>

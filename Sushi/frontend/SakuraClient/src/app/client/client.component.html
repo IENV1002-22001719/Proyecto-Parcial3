@@ -1,54 +1,52 @@
-<div class="min-h-screen flex flex-col text-slate-800 w-full relative bg-[#FAF5EC] pt-20">
+<div class="min-h-screen flex flex-col text-slate-800 w-full relative bg-[#FBF6EC] pt-20">
     
     <!-- FONDO SAKURA -->
     <div class="absolute inset-0 opacity-20 pointer-events-none bg-repeat" style="background-image: url('https://i.postimg.cc/xCQnm8hw/Gemini-Generated-Image-uax6osuax6osuax6.jpg');"></div>
 
     <!-- NAVEGACIÓN SUPERIOR FIJA -->
-    <div class="px-4 sm:px-8 py-3.5 shadow-md fixed top-0 left-0 right-0 z-50 bg-white border-b-2" style="border-color: #E4D4BA;">
+    <div class="px-4 sm:px-8 py-3.5 shadow-md fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] border-b-2" style="border-color: #F3ECDA;">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4 text-xs font-bold">
             
             <div class="flex items-center gap-3 cursor-pointer" (click)="setClientSection('inicio')">
-                <div class="w-10 h-10 rounded-2xl overflow-hidden shadow-md border-2" style="border-color: #781428;">
-                    <img src="https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=150&q=80" alt="Logo Hanami" class="w-full h-full object-cover">
-                </div>
+                <img src="https://i.postimg.cc/7CC88vGF/Gemini-Generated-Image-h4dv76h4dv76h4dv.jpg" alt="Logo Hanami" class="h-11 w-auto object-contain shrink-0">
                 <div>
-                    <h1 class="font-hoshiko text-2xl tracking-wider" style="color: #5C0B1B;">Hanami Sushi</h1>
+                    <h1 class="font-hoshiko text-2xl tracking-wider" style="color: #4A1A26;">Hanami Sushi</h1>
                     <span class="text-[10px] text-gray-500 font-medium block">Alta Cocina Japonesa</span>
                 </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-                <button (click)="setClientSection('inicio')" [style.background-color]="clientSection==='inicio' ? '#781428' : 'transparent'" [style.color]="clientSection==='inicio' ? '#FFF' : '#5C0B1B'" class="px-3.5 py-2 rounded-xl shadow-sm transition hover:bg-[#781428] hover:text-white border border-[#E4D4BA]">Inicio</button>
-                <button (click)="setClientSection('menu')" [style.background-color]="clientSection==='menu' ? '#781428' : 'transparent'" [style.color]="clientSection==='menu' ? '#FFF' : '#5C0B1B'" class="px-3.5 py-2 rounded-xl shadow-sm transition hover:bg-[#781428] hover:text-white border border-[#E4D4BA]">Menú a la Carta</button>
+                <button (click)="setClientSection('inicio')" [style.background-color]="clientSection==='inicio' ? '#E3632C' : 'transparent'" [style.color]="clientSection==='inicio' ? '#FFFFFF' : '#4A1A26'" class="px-3.5 py-2 rounded-xl shadow-sm transition hover:bg-[#E3632C] hover:text-white border border-[#F3ECDA]">Inicio</button>
+                <button (click)="setClientSection('menu')" [style.background-color]="clientSection==='menu' ? '#E3632C' : 'transparent'" [style.color]="clientSection==='menu' ? '#FFFFFF' : '#4A1A26'" class="px-3.5 py-2 rounded-xl shadow-sm transition hover:bg-[#E3632C] hover:text-white border border-[#F3ECDA]">Menú a la Carta</button>
 
                 <ng-container *ngIf="!isGuest && loggedEmail">
-                    <button (click)="setClientSection('pedidos')" [style.background-color]="clientSection==='pedidos' ? '#781428' : 'transparent'" [style.color]="clientSection==='pedidos' ? '#FFF' : '#5C0B1B'" class="px-3.5 py-2 rounded-xl shadow-sm transition hover:bg-[#781428] hover:text-white border border-[#E4D4BA]">Mis Pedidos</button>
-                    <button (click)="setClientSection('reservas')" [style.background-color]="clientSection==='reservas' ? '#781428' : 'transparent'" [style.color]="clientSection==='reservas' ? '#FFF' : '#5C0B1B'" class="px-3.5 py-2 rounded-xl shadow-sm transition hover:bg-[#781428] hover:text-white border border-[#E4D4BA]">Reservar Mesa</button>
-                    <button (click)="setClientSection('rewards')" [style.background-color]="clientSection==='rewards' ? '#781428' : 'transparent'" [style.color]="clientSection==='rewards' ? '#FFF' : '#5C0B1B'" class="px-3.5 py-2 rounded-xl shadow-sm transition hover:bg-[#781428] hover:text-white border border-[#E4D4BA]">Club Hanami</button>
+                    <button (click)="setClientSection('pedidos')" [style.background-color]="clientSection==='pedidos' ? '#E3632C' : 'transparent'" [style.color]="clientSection==='pedidos' ? '#FFFFFF' : '#4A1A26'" class="px-3.5 py-2 rounded-xl shadow-sm transition hover:bg-[#E3632C] hover:text-white border border-[#F3ECDA]">Mis Pedidos</button>
+                    <button (click)="setClientSection('reservas')" [style.background-color]="clientSection==='reservas' ? '#E3632C' : 'transparent'" [style.color]="clientSection==='reservas' ? '#FFFFFF' : '#4A1A26'" class="px-3.5 py-2 rounded-xl shadow-sm transition hover:bg-[#E3632C] hover:text-white border border-[#F3ECDA]">Reservar Mesa</button>
+                    <button (click)="setClientSection('rewards')" [style.background-color]="clientSection==='rewards' ? '#E3632C' : 'transparent'" [style.color]="clientSection==='rewards' ? '#FFFFFF' : '#4A1A26'" class="px-3.5 py-2 rounded-xl shadow-sm transition hover:bg-[#E3632C] hover:text-white border border-[#F3ECDA]">Club Hanami</button>
                 </ng-container>
 
                 <!-- ÍCONO DE PEDIDO (SIN PALABRA "CARRITO") -->
-                <button (click)="toggleBagDrawer()" aria-label="Abrir orden" class="relative p-2.5 rounded-xl bg-[#FAF5EC] hover:bg-amber-200/60 text-[#5C0B1B] border border-[#E4D4BA] shadow-sm transition flex items-center justify-center">
+                <button (click)="toggleBagDrawer()" aria-label="Abrir orden" class="relative p-2.5 rounded-xl bg-[#FDECEB] hover:bg-[#FCE1D2] text-[#4A1A26] border border-[#F3BCC4] shadow-sm transition flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
-                    <span *ngIf="cart.length > 0" class="ml-1 px-1.5 py-0.5 rounded-full bg-amber-300 text-slate-900 font-extrabold text-[10px] leading-none">{{ cart.length }}</span>
+                    <span *ngIf="cart.length > 0" class="ml-1 px-1.5 py-0.5 rounded-full bg-[#E3632C] text-white font-extrabold text-[10px] leading-none">{{ cart.length }}</span>
                 </button>
             </div>
 
-            <div class="flex items-center gap-3 bg-[#FAF5EC] px-3 py-1.5 rounded-2xl border border-[#E4D4BA] shadow-inner">
+            <div class="flex items-center gap-3 bg-[#FBF6EC] px-3 py-1.5 rounded-2xl border border-[#F3ECDA] shadow-inner">
                 <ng-container *ngIf="!isGuest && loggedEmail; else guestActions">
                     <div class="flex items-center gap-2.5 cursor-pointer" (click)="setClientSection('perfil')">
                         <div class="text-left hidden sm:block">
-                            <span class="block font-bold text-slate-800 text-xs truncate max-w-[140px]">{{ userProfile.name }} {{ userProfile.lastName }}</span>
+                            <span class="block font-bold text-[#4A1A26] text-xs truncate max-w-[140px]">{{ userProfile.name }} {{ userProfile.lastName }}</span>
                             <span class="block text-[9px] text-gray-500 truncate max-w-[140px]">{{ userProfile.email }}</span>
                         </div>
                     </div>
-                    <button (click)="onLogout.emit()" class="px-2.5 py-1.5 rounded-xl bg-red-800 hover:bg-red-900 text-white text-[11px] font-bold shadow transition">Salir</button>
+                    <button (click)="onLogout.emit()" class="px-2.5 py-1.5 rounded-xl bg-[#4A1A26] hover:bg-[#D43F79] text-white text-[11px] font-bold shadow transition">Salir</button>
                 </ng-container>
 
                 <ng-template #guestActions>
-                    <button (click)="onRequireLogin.emit('login')" class="px-3.5 py-1.5 rounded-xl bg-[#781428] hover:bg-[#5C0B1B] text-amber-100 text-[11px] font-black shadow transition">
+                    <button (click)="onRequireLogin.emit('login')" class="px-3.5 py-1.5 rounded-xl bg-[#E3632C] hover:bg-[#4A1A26] text-white text-[11px] font-black shadow transition">
                         Iniciar sesión / Registrarse
                     </button>
                 </ng-template>
@@ -58,152 +56,352 @@
 
     <main class="w-full flex-1 space-y-14 pb-16 relative z-10">
         
-        <!-- INICIO: BANNER ORIGINAL CONSERVADO + ESTRUCTURA NUEVA DESDE "¿CÓMO DISFRUTAS TU HANAMI HOY?" -->
+        <!-- INICIO (SIN MODIFICAR) -->
         <section *ngIf="clientSection === 'inicio'" class="space-y-12">
-            <div class="relative w-full py-24 sm:py-32 px-6 sm:px-16 overflow-hidden bg-gradient-to-r from-[#781428] to-[#5C0B1B] text-white shadow-2xl">
-                <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=1600&q=80')] bg-cover bg-center opacity-25 pointer-events-none"></div>
-                <div class="max-w-6xl mx-auto relative z-20 space-y-6 text-left">
-                    <span class="px-4 py-1.5 rounded-full bg-amber-300 text-slate-900 text-[10px] font-extrabold tracking-widest uppercase shadow-md inline-block">
-                        Alta Cocina Japonesa en León, Gto.
-                    </span>
-                    <h2 class="font-brush text-5xl sm:text-7xl font-bold leading-tight text-amber-100 tracking-wide drop-shadow-lg max-w-3xl">
-                        Tradición Nipona & Sazón Mexicano.
-                    </h2>
-                    <p class="text-sm sm:text-base text-rose-100 font-normal leading-relaxed max-w-2xl">
-                        Bienvenido a Hanami Sushi. Nos especializamos en fusionar la alta cocina tradicional japonesa con ingredientes frescos locales de la más alta calidad. Conoce nuestra dinámica inteligente y descubre por qué somos únicos.
-                    </p>
-                    <div class="pt-4 flex flex-wrap gap-4 items-center">
-                        <button (click)="setClientSection('menu')" class="px-9 py-4 rounded-2xl bg-amber-300 hover:bg-amber-400 text-slate-900 font-black text-xs shadow-xl transition transform hover:-translate-y-1">
-                            Ver Menú a la Carta ➔
+            
+            <!-- PORTADA PRINCIPAL -->
+            <div class="relative w-full min-h-[560px] lg:min-h-[620px] overflow-hidden bg-[#FBF6EC] border-b-2 shadow-xl" style="border-color: #F3ECDA;">
+                <div class="absolute inset-0 bg-cover bg-right lg:bg-center opacity-95 pointer-events-none" style="background-image: url('https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=1600&q=80');"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-[#FBF6EC] via-[#FBF6EC]/90 to-[#F3BCC4]/30 pointer-events-none"></div>
+
+                <div class="max-w-7xl mx-auto px-6 sm:px-12 py-12 lg:py-16 relative z-20 grid grid-cols-1 lg:grid-cols-12 gap-8 items-end min-h-[560px] lg:min-h-[620px]">
+                    <div class="lg:col-span-9 flex gap-4 sm:gap-6 items-start">
+                        <div class="hidden sm:flex flex-col items-center text-xs font-serif tracking-[0.45em] text-[#E3632C]/80 select-none pt-24" style="writing-mode: vertical-rl;">
+                            花見寿司 · LEÓN
+                        </div>
+
+                        <div class="space-y-5 max-w-2xl">
+                            <div class="flex items-center gap-3">
+                                <div>
+                                    <span class="text-[9px] font-bold tracking-[0.22em] uppercase text-gray-500">SUSHI 花見寿司 · LEÓN, GTO.</span>
+                                </div>
+                            </div>
+
+                            <span class="text-[10px] font-black tracking-[0.2em] uppercase text-[#E3632C] block">
+                                ALTA COCINA JAPONESA · PWA & KDS
+                            </span>
+
+                            <h2 class="font-serif text-4xl sm:text-6xl font-bold leading-[1.08] tracking-tight" style="color: #4A1A26;">
+                                Tradición Nipona<br>
+                                y <span class="italic font-normal text-[#E3632C]">Sazón</span><br>
+                                <span class="italic font-normal text-[#D43F79]">Mexicano</span>
+                            </h2>
+
+                            <p class="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-lg font-medium">
+                                Experiencia gastronómica en León, Gto. con ingredientes frescos, modalidades al momento, programadas y envío a domicilio, conectadas en tiempo real con cocina y Club Hanami.
+                            </p>
+
+                            <!-- NÚMEROS SIN CUADRO BLANCO -->
+                            <div class="grid grid-cols-4 gap-3 sm:gap-6 pt-1 max-w-xl">
+                                <div class="py-1">
+                                    <span class="text-2xl sm:text-3xl font-black text-[#E3632C] block leading-none">7</span>
+                                    <span class="text-[10px] text-gray-500 font-semibold mt-1 block">Platillos base</span>
+                                </div>
+                                <div class="py-1">
+                                    <span class="text-2xl sm:text-3xl font-black text-[#4A1A26] block leading-none">3</span>
+                                    <span class="text-[10px] text-gray-500 font-semibold mt-1 block">Canales entrega</span>
+                                </div>
+                                <div class="py-1">
+                                    <span class="text-2xl sm:text-3xl font-black text-[#4A1A26] block leading-none">4</span>
+                                    <span class="text-[10px] text-gray-500 font-semibold mt-1 block">Mesas sucursal</span>
+                                </div>
+                                <div class="py-1">
+                                    <span class="text-2xl sm:text-3xl font-black text-[#D43F79] block leading-none">5</span>
+                                    <span class="text-[10px] text-gray-500 font-semibold mt-1 block">Niveles VIP</span>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-3 pt-1">
+                                <button (click)="setClientSection('menu')" class="px-6 py-3 rounded-xl bg-[#E3632C] hover:bg-[#4A1A26] text-white font-black text-xs shadow-lg transition">
+                                    Ver Menú a la Carta ➔
+                                </button>
+                                <button *ngIf="!isGuest && loggedEmail" (click)="setClientSection('rewards')" class="px-5 py-3 rounded-xl bg-[#FDECEB] hover:bg-[#FCE1D2] text-[#4A1A26] font-bold text-xs border shadow-sm transition" style="border-color: #F3BCC4;">
+                                    Club Hanami
+                                </button>
+                            </div>
+
+                            <p class="text-[10px] text-gray-400 font-medium pt-2">
+                                Hanami Sushi León, Gto. · Sucursal & Pedidos en Línea
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FRANJA SUPERIOR: ¿QUÉ SE TE ANTOJA HOY? CON TUS PLATILLOS -->
+            <div class="w-full bg-[#FDECEB]/90 border-y-2 py-8 px-4 sm:px-8" style="border-color: #F3ECDA;">
+                <div class="max-w-6xl mx-auto space-y-6">
+                    <div class="flex flex-wrap items-end justify-between gap-2">
+                        <div>
+                            <span class="text-[10px] font-black tracking-[0.2em] uppercase text-[#E3632C] block">
+                                お品書き — EXPLORA LA CARTA
+                            </span>
+                            <h3 class="font-serif text-3xl sm:text-4xl font-bold mt-1" style="color: #4A1A26;">
+                                ¿Qué se te antoja hoy?
+                            </h3>
+                        </div>
+                        <button (click)="setClientSection('menu')" class="text-xs font-bold text-[#4A1A26] hover:text-[#E3632C] transition">
+                            Ver todo el menú →
                         </button>
-                        <button *ngIf="!isGuest && loggedEmail" (click)="setClientSection('rewards')" class="px-7 py-4 rounded-2xl bg-white/10 hover:bg-white/20 text-amber-100 font-bold text-xs shadow-xl border border-amber-200/40 backdrop-blur-md transition">
-                            Descubre Club Hanami
+                    </div>
+
+                    <div class="flex items-start justify-start sm:justify-center gap-5 overflow-x-auto pb-2">
+                        <button *ngFor="let item of getFeaturedList(); let idx = index"
+                                (click)="selectFeatured(idx)"
+                                (dblclick)="item.disponible !== 0 && item.disponible !== false && openCustomizeModal(item)"
+                                class="group flex flex-col items-center gap-2 shrink-0 w-24 text-center focus:outline-none">
+                            <div class="w-20 h-20 rounded-full overflow-hidden border-2 shadow-md transition-all duration-300 bg-white"
+                                 [ngClass]="featuredIndex === idx ? 'border-[#E3632C] scale-105 ring-4 ring-[#F3BCC4]/60' : 'border-white group-hover:scale-105 group-hover:border-[#E3632C]'">
+                                <img [src]="item.image" [alt]="item.name" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                            </div>
+                            <span class="text-[11px] font-bold leading-tight line-clamp-2 transition-colors duration-300"
+                                  [ngClass]="featuredIndex === idx ? 'text-[#E3632C] font-black' : 'text-[#4A1A26]'">
+                                {{ item.name }}
+                            </span>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- ESTRUCTURA NUEVA CONSERVANDO CUADROS DE COLOR DE HANAMI -->
-            <div class="max-w-6xl mx-auto px-4 sm:px-8 space-y-10">
-                
+            <!-- CONTENEDOR PRINCIPAL -->
+            <div class="max-w-6xl mx-auto px-4 sm:px-8 space-y-12">
+
+                <!-- DESTACADOS QUE GIRAN (TUS PLATILLOS CON TRANSICIÓN EN CÍRCULOS) -->
+                <div *ngIf="getFeaturedList().length > 0" class="bg-[#FFFFFF] rounded-[2.5rem] p-6 sm:p-10 border-2 shadow-xl space-y-6" style="border-color: #F3ECDA;">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                        
+                        <!-- Datos del platillo activo -->
+                        <div class="lg:col-span-5 space-y-3 text-left transition-all duration-500">
+                            <span class="text-[10px] font-black tracking-[0.2em] uppercase text-[#E3632C] block">
+                                回転寿司 — LA BANDA HANAMI
+                            </span>
+                            <h3 class="font-serif text-3xl sm:text-4xl font-bold" style="color: #4A1A26;">
+                                Destacados que giran
+                            </h3>
+                            <span class="px-3 py-0.5 rounded-full bg-[#FCE1D2] text-[#E3632C] border border-[#F3BCC4] text-[10px] font-bold inline-block">
+                                Fama del chef
+                            </span>
+
+                            <p class="text-xs font-serif text-[#D43F79] tracking-widest pt-1">
+                                花見寿司 · {{ getFeaturedProduct().category || 'Especialidad' }}
+                            </p>
+                            <h4 class="font-serif text-4xl sm:text-5xl font-bold leading-tight transition-all duration-300" style="color: #4A1A26;">
+                                {{ getFeaturedProduct().name }}
+                            </h4>
+                            <p class="text-xs sm:text-sm text-gray-600 leading-relaxed transition-all duration-300">
+                                {{ getFeaturedProduct().description }}
+                            </p>
+
+                            <div class="flex flex-wrap items-center gap-3 pt-1">
+                                <span class="text-2xl font-black text-[#E3632C]">${{ getFeaturedProduct().price }}.00</span>
+                                <span class="px-3 py-1 rounded-full bg-[#FBF6EC] border text-[10px] font-bold text-[#4A1A26]" style="border-color: #F3ECDA;">
+                                    ● {{ getFeaturedProduct().disponible === 0 || getFeaturedProduct().disponible === false ? 'Agotado hoy' : 'Disponible al momento' }}
+                                </span>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-3 pt-2">
+                                <button (click)="addFeaturedToCart(getFeaturedProduct())"
+                                        [disabled]="getFeaturedProduct().disponible === 0 || getFeaturedProduct().disponible === false"
+                                        class="px-5 py-3 rounded-full bg-[#E3632C] hover:bg-[#4A1A26] disabled:opacity-50 text-white font-black text-xs shadow-md transition">
+                                    Agregar al pedido →
+                                </button>
+                                <button (click)="getFeaturedProduct().disponible !== 0 && getFeaturedProduct().disponible !== false && openCustomizeModal(getFeaturedProduct())"
+                                        class="px-5 py-3 rounded-full bg-[#FDECEB] hover:bg-[#FCE1D2] text-[#4A1A26] border font-bold text-xs shadow-sm transition" style="border-color: #F3BCC4;">
+                                    Ver detalle
+                                </button>
+                            </div>
+
+                            <!-- Controles de transición -->
+                            <div class="flex items-center gap-2.5 pt-3">
+                                <button (click)="prevFeatured()" aria-label="Anterior" class="w-8 h-8 rounded-full bg-[#FBF6EC] border flex items-center justify-center text-xs font-bold text-[#4A1A26] hover:bg-[#FCE1D2] active:scale-95 transition" style="border-color: #F3ECDA;">
+                                    ‹
+                                </button>
+                                <button (click)="nextFeatured()" aria-label="Siguiente" class="w-8 h-8 rounded-full bg-[#E3632C] text-white flex items-center justify-center text-xs font-bold shadow hover:bg-[#4A1A26] active:scale-95 transition">
+                                    ›
+                                </button>
+                                <span class="text-[11px] font-black text-[#4A1A26] ml-1">
+                                    {{ (featuredIndex + 1) < 10 ? '0' + (featuredIndex + 1) : (featuredIndex + 1) }} / {{ getFeaturedList().length < 10 ? '0' + getFeaturedList().length : getFeaturedList().length }}
+                                </span>
+                                <div class="flex items-center gap-1 ml-1">
+                                    <button *ngFor="let p of getFeaturedList(); let i = index"
+                                            (click)="selectFeatured(i)"
+                                            [attr.aria-label]="'Ir a platillo ' + (i + 1)"
+                                            class="h-1.5 rounded-full transition-all duration-300"
+                                            [ngClass]="featuredIndex === i ? 'w-5 bg-[#E3632C]' : 'w-1.5 bg-[#F3BCC4] hover:bg-[#E3632C]/60'">
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Círculos con transición animada -->
+                        <div class="lg:col-span-7 relative flex items-center justify-center py-6">
+                            <div class="w-72 h-72 sm:w-80 sm:h-80 rounded-full border-8 border-dashed border-[#F3BCC4] flex items-center justify-center relative bg-[#FDECEB]/70 transition-transform duration-700 ease-out"
+                                 [style.transform]="'rotate(' + (featuredIndex * 45) + 'deg)'">
+
+                                <!-- Platillo principal central -->
+                                <div (click)="getFeaturedProduct().disponible !== 0 && getFeaturedProduct().disponible !== false && openCustomizeModal(getFeaturedProduct())"
+                                     class="w-52 h-52 sm:w-60 sm:h-60 rounded-full overflow-hidden border-4 border-[#E3632C] shadow-2xl bg-white cursor-pointer transition-all duration-500 ease-out hover:scale-105"
+                                     [style.transform]="'rotate(-' + (featuredIndex * 45) + 'deg)'">
+                                    <img [src]="getFeaturedProduct().image" [alt]="getFeaturedProduct().name" class="w-full h-full object-cover transition-all duration-500">
+                                </div>
+
+                                <!-- Círculo satélite anterior -->
+                                <button (click)="prevFeatured()"
+                                        [attr.title]="getPrevFeatured().name"
+                                        class="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-[#D43F79] shadow-md absolute -top-2 left-4 sm:left-6 bg-white transition-all duration-500 hover:scale-110"
+                                        [style.transform]="'rotate(-' + (featuredIndex * 45) + 'deg)'">
+                                    <img [src]="getPrevFeatured().image" [alt]="getPrevFeatured().name" class="w-full h-full object-cover">
+                                </button>
+
+                                <!-- Círculo satélite siguiente -->
+                                <button (click)="nextFeatured()"
+                                        [attr.title]="getNextFeatured().name"
+                                        class="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-[#E3632C] shadow-md absolute -bottom-2 right-4 sm:right-6 bg-white transition-all duration-500 hover:scale-110"
+                                        [style.transform]="'rotate(-' + (featuredIndex * 45) + 'deg)'">
+                                    <img [src]="getNextFeatured().image" [alt]="getNextFeatured().name" class="w-full h-full object-cover">
+                                </button>
+                            </div>
+
+                            <span class="absolute bottom-0 right-2 text-[10px] text-gray-400 font-medium">
+                                Toca un círculo para cambiar o abrir tu platillo
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COMBO HANAMI PARA COMPARTIR -->
+                <div class="rounded-[2rem] overflow-hidden shadow-xl border-2 grid grid-cols-1 lg:grid-cols-12" style="border-color: #F3ECDA;">
+                    <div class="lg:col-span-6 bg-[#E3632C] text-white p-7 sm:p-10 flex flex-col justify-center space-y-4">
+                        <span class="text-[10px] font-black tracking-[0.2em] uppercase text-[#FCE1D2] block">
+                            二人前特別 — PARA COMPARTIR
+                        </span>
+                        <h3 class="font-serif text-3xl sm:text-5xl font-bold leading-tight text-white">
+                            Combo Hanami<br>para dos
+                        </h3>
+                        <p class="text-xs sm:text-sm text-[#FDECEB] leading-relaxed max-w-md">
+                            Selección de nigiri, maki y rollos preparados al momento con ingredientes frescos para compartir en sucursal o en casa.
+                        </p>
+                        <div class="flex flex-wrap items-center gap-4 pt-2">
+                            <button (click)="setClientSection('menu')" class="px-6 py-2.5 rounded-full bg-[#FFFFFF] hover:bg-[#FDECEB] text-[#4A1A26] font-black text-xs shadow transition">
+                                Lo quiero →
+                            </button>
+                            <div>
+                                <span class="text-2xl sm:text-3xl font-black text-[#FFFFFF] block leading-none">$549.00</span>
+                                <span class="text-[10px] text-[#FCE1D2]">precio especial</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-6 min-h-[260px] lg:min-h-[340px] bg-white">
+                        <img src="https://images.unsplash.com/photo-1563612116625-3012372fccce?auto=format&fit=crop&w=1000&q=80" alt="Combo Hanami para dos" class="w-full h-full object-cover">
+                    </div>
+                </div>
+
+                <!-- NUESTRA HISTORIA -->
+                <div class="bg-[#FFFFFF] rounded-[2.5rem] p-6 sm:p-10 border-2 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center" style="border-color: #F3ECDA;">
+                    <div class="lg:col-span-6">
+                        <div class="rounded-3xl overflow-hidden border-2 shadow-md h-64 sm:h-80 bg-[#FBF6EC]" style="border-color: #F3ECDA;">
+                            <img src="https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=900&q=80" alt="Barra Hanami Sushi León" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-6 space-y-4 text-left">
+                        <span class="text-[10px] font-black tracking-[0.2em] uppercase text-[#E3632C] block">
+                            私たちの物語 — NUESTRA HISTORIA
+                        </span>
+                        <h3 class="font-serif text-3xl sm:text-4xl font-bold leading-tight" style="color: #4A1A26;">
+                            Un pedacito de primavera japonesa en León, Gto.
+                        </h3>
+                        <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                            Hanami es la tradición de reunirse bajo los cerezos en flor. Así queremos que se sienta cada visita: sin prisas, con buena compañía y con sushi preparado al momento.
+                        </p>
+
+                        <div class="space-y-3 pt-1">
+                            <div class="flex items-start gap-3">
+                                <span class="w-6 h-6 rounded-full bg-[#FDECEB] border border-[#F3BCC4] text-[#E3632C] font-black text-xs flex items-center justify-center shrink-0 mt-0.5">✓</span>
+                                <div>
+                                    <p class="text-xs font-black" style="color: #4A1A26;">Ingredientes de temporada</p>
+                                    <p class="text-[11px] text-gray-500">Seleccionamos insumos frescos cada mañana con sazón mexicano.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <span class="w-6 h-6 rounded-full bg-[#FDECEB] border border-[#F3BCC4] text-[#E3632C] font-black text-xs flex items-center justify-center shrink-0 mt-0.5">◷</span>
+                                <div>
+                                    <p class="text-xs font-black" style="color: #4A1A26;">Hecho al momento</p>
+                                    <p class="text-[11px] text-gray-500">Cada orden se envía directo a cocina al momento o en tu horario programado.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <span class="w-6 h-6 rounded-full bg-[#FDECEB] border border-[#F3BCC4] text-[#D43F79] font-black text-xs flex items-center justify-center shrink-0 mt-0.5">♡</span>
+                                <div>
+                                    <p class="text-xs font-black" style="color: #4A1A26;">Hospitalidad omotenashi y Club Hanami</p>
+                                    <p class="text-[11px] text-gray-500">Atención cercana en sucursal, reservas y recompensas en cada pedido.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 1. DINÁMICA DE SERVICIO -->
-                <div class="bg-[#5C0B1B] text-white rounded-[2.5rem] p-6 sm:p-10 shadow-xl border-2 border-[#E4D4BA] space-y-6">
+                <div class="bg-[#F3ECDA] text-[#4A1A26] rounded-[2.5rem] p-6 sm:p-10 shadow-xl border-2 border-[#F3BCC4] space-y-6">
                     <div class="space-y-1">
-                        <span class="px-3.5 py-1 rounded-full bg-amber-300 text-slate-900 text-[10px] font-black uppercase inline-block">Modalidades Inteligentes</span>
-                        <h3 class="font-brush text-4xl sm:text-5xl font-bold text-amber-100">¿Cómo disfrutas tu Hanami hoy?</h3>
-                        <p class="text-xs sm:text-sm text-rose-100">Adaptamos nuestro servicio a tu ritmo de vida con tres opciones:</p>
+                        <span class="px-3.5 py-1 rounded-full bg-[#E3632C] text-white text-[10px] font-black uppercase inline-block">Modalidades Inteligentes</span>
+                        <h3 class="font-brush text-4xl sm:text-5xl font-bold text-[#4A1A26]">¿Cómo disfrutas tu Hanami hoy?</h3>
+                        <p class="text-xs sm:text-sm text-gray-600">Adaptamos nuestro servicio a tu ritmo de vida con tres opciones:</p>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        <div class="bg-[#781428] p-6 rounded-3xl border border-amber-200/30 shadow-md space-y-2.5">
-                            <div class="w-8 h-8 rounded-full bg-amber-300 text-slate-900 font-black flex items-center justify-center text-xs">1</div>
-                            <h4 class="font-bold text-base text-amber-200">Al Momento en Sucursal</h4>
-                            <p class="text-xs text-rose-100 leading-relaxed">
+                        <div class="bg-[#FFFFFF] p-6 rounded-3xl border border-[#F3ECDA] shadow-md space-y-2.5">
+                            <div class="w-8 h-8 rounded-full bg-[#E3632C] text-white font-black flex items-center justify-center text-xs">1</div>
+                            <h4 class="font-bold text-base text-[#4A1A26]">Al Momento en Sucursal</h4>
+                            <p class="text-xs text-gray-600 leading-relaxed">
                                 Pide desde tu celular sin filas. Cocina recibe tu orden al instante, se prepara al momento con insumos frescos del día y te notificamos en cuanto esté lista para recoger.
                             </p>
                         </div>
-                        <div class="bg-[#781428] p-6 rounded-3xl border border-amber-200/30 shadow-md space-y-2.5">
-                            <div class="w-8 h-8 rounded-full bg-amber-300 text-slate-900 font-black flex items-center justify-center text-xs">2</div>
-                            <h4 class="font-bold text-base text-amber-200">Sobre Pedido Programado</h4>
-                            <p class="text-xs text-rose-100 leading-relaxed">
+                        <div class="bg-[#FFFFFF] p-6 rounded-3xl border border-[#F3ECDA] shadow-md space-y-2.5">
+                            <div class="w-8 h-8 rounded-full bg-[#E3632C] text-white font-black flex items-center justify-center text-xs">2</div>
+                            <h4 class="font-bold text-base text-[#4A1A26]">Sobre Pedido Programado</h4>
+                            <p class="text-xs text-gray-600 leading-relaxed">
                                 Programa el día y la hora exacta en la que deseas que tu banquete esté recién hecho y listo para tus reuniones familiares o juntas de trabajo.
                             </p>
                         </div>
-                        <div class="bg-[#781428] p-6 rounded-3xl border border-amber-200/30 shadow-md space-y-2.5">
-                            <div class="w-8 h-8 rounded-full bg-amber-300 text-slate-900 font-black flex items-center justify-center text-xs">3</div>
-                            <h4 class="font-bold text-base text-amber-200">Envío a Domicilio (Uber)</h4>
-                            <p class="text-xs text-rose-100 leading-relaxed">
+                        <div class="bg-[#FFFFFF] p-6 rounded-3xl border border-[#F3ECDA] shadow-md space-y-2.5">
+                            <div class="w-8 h-8 rounded-full bg-[#D43F79] text-white font-black flex items-center justify-center text-xs">3</div>
+                            <h4 class="font-bold text-base text-[#4A1A26]">Envío a Domicilio (Uber)</h4>
+                            <p class="text-xs text-gray-600 leading-relaxed">
                                 Recibe tu sushi favorito directamente en la puerta de tu hogar utilizando la dirección guardada en tu perfil o ajustándola al momento de pagar.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <!-- 2. LOS 7 PLATILLOS ESENCIALES -->
-                <div class="bg-[#FAF8F5] rounded-[2.5rem] p-6 sm:p-10 border-2 shadow-xl space-y-6" style="border-color: #E4D4BA;">
-                    <div class="space-y-1">
-                        <span class="px-3.5 py-1 rounded-full bg-[#781428] text-amber-100 text-[10px] font-black uppercase inline-block">Nuestra Carta Completa</span>
-                        <h3 class="font-brush text-4xl sm:text-5xl font-bold" style="color: #5C0B1B;">Conoce los 7 Platillos Esenciales</h3>
-                        <p class="text-xs sm:text-sm text-gray-600">Cada uno de nuestros platillos ofrece una experiencia única elaborada con técnicas milenarias.</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        <div class="bg-[#781428] text-white p-6 rounded-3xl border border-[#E4D4BA] shadow-md space-y-2 relative">
-                            <span class="absolute top-4 right-4 px-2.5 py-0.5 rounded-full bg-amber-300 text-slate-900 font-black text-[10px]">Especialidad</span>
-                            <h4 class="font-bold text-base text-amber-100">1. Chirashizushi ($165.00)</h4>
-                            <p class="text-xs text-rose-100 leading-relaxed"><b>En qué consiste:</b> Bowl de arroz sazonado con cortes frescos de salmón de importación, aguacate Hass y pepino.</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl border-2 shadow-sm space-y-2" style="border-color: #E4D4BA;">
-                            <h4 class="font-bold text-base" style="color: #5C0B1B;">2. Temaki ($115.00)</h4>
-                            <p class="text-xs text-gray-600 leading-relaxed"><b>En qué consiste:</b> Cono crujiente de alga nori relleno de arroz al vapor, atún fresco y toque de ajonjolí.</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl border-2 shadow-sm space-y-2" style="border-color: #E4D4BA;">
-                            <h4 class="font-bold text-base" style="color: #5C0B1B;">3. Hosomaki ($125.00)</h4>
-                            <p class="text-xs text-gray-600 leading-relaxed"><b>En qué consiste:</b> Rollo tradicional delgado envuelto en alga nori con salmón fresco y arroz Nishiki.</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl border-2 shadow-sm space-y-2" style="border-color: #E4D4BA;">
-                            <h4 class="font-bold text-base" style="color: #5C0B1B;">4. Uramaki Estilo Mexicano ($155.00)</h4>
-                            <p class="text-xs text-gray-600 leading-relaxed"><b>En qué consiste:</b> Rollo empanizado crujiente por fuera con arroz por dentro, camarón, queso crema y chile toreado.</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl border-2 shadow-sm space-y-2" style="border-color: #E4D4BA;">
-                            <h4 class="font-bold text-base" style="color: #5C0B1B;">5. Gunkan ($145.00)</h4>
-                            <p class="text-xs text-gray-600 leading-relaxed"><b>En qué consiste:</b> Barquitos de arroz envueltos en nori coronados con ensalada de atún picante y masago.</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl border-2 shadow-sm space-y-2" style="border-color: #E4D4BA;">
-                            <h4 class="font-bold text-base" style="color: #5C0B1B;">6. Nigiri ($135.00)</h4>
-                            <p class="text-xs text-gray-600 leading-relaxed"><b>En qué consiste:</b> Arroz moldeado a mano cubierto con láminas frescas de salmón y atún fileteado al momento.</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl border-2 shadow-sm space-y-2" style="border-color: #E4D4BA;">
-                            <h4 class="font-bold text-base" style="color: #5C0B1B;">7. Oshizushi ($160.00)</h4>
-                            <p class="text-xs text-gray-600 leading-relaxed"><b>En qué consiste:</b> Sushi prensado estilo Osaka en capas geométricas de arroz, aguacate y pescado fresco.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. RECOMENDACIÓN DE LA CASA -->
-                <div class="bg-[#781428] text-white rounded-[2.5rem] p-6 sm:p-10 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center border-2" style="border-color: #E4D4BA;">
-                    <div class="lg:col-span-4">
-                        <div class="rounded-3xl overflow-hidden border-2 shadow-lg h-56 border-amber-200/40">
-                            <img src="https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=600&q=80" alt="Chirashizushi" class="w-full h-full object-cover">
-                        </div>
-                    </div>
-                    <div class="lg:col-span-8 space-y-3 text-left">
-                        <span class="px-3.5 py-1 rounded-full bg-amber-300 text-slate-900 text-[10px] font-black uppercase inline-block">Recomendación de la Casa</span>
-                        <h3 class="font-brush text-4xl sm:text-5xl font-bold text-amber-100">Nuestro Orgullo: Chirashizushi</h3>
-                        <p class="text-xs sm:text-sm text-rose-100 leading-relaxed">
-                            Te recomendamos ampliamente probar el <b>Chirashizushi</b> como tu primera opción. Es el equilibrio perfecto entre la frescura del salmón de importación, la cremosidad del aguacate Hass y la sazón de nuestro arroz Nishiki. ¡Te encantará!
-                        </p>
-                        <button (click)="setClientSection('menu')" class="px-7 py-3 rounded-2xl bg-amber-300 hover:bg-amber-400 text-slate-900 font-black text-xs shadow-lg transition">
-                            Ordenar Chirashizushi Ahora ➔
-                        </button>
-                    </div>
-                </div>
-
                 <!-- 4. REWARDS PASS -->
-                <div class="bg-[#FAF8F5] rounded-[2.5rem] p-6 sm:p-10 border-2 shadow-xl space-y-6" style="border-color: #E4D4BA;">
+                <div class="bg-[#FFFFFF] rounded-[2.5rem] p-6 sm:p-10 border-2 shadow-xl space-y-6" style="border-color: #F3ECDA;">
                     <div class="space-y-1">
-                        <span class="px-3.5 py-1 rounded-full bg-amber-300 text-slate-900 text-[10px] font-black uppercase inline-block">Club Lealtad VIP</span>
-                        <h3 class="font-brush text-4xl sm:text-5xl font-bold" style="color: #5C0B1B;">¿Qué son los Rewards Pass y qué te ganas?</h3>
+                        <span class="px-3.5 py-1 rounded-full bg-[#E3632C] text-white text-[10px] font-black uppercase inline-block">Club Lealtad VIP</span>
+                        <h3 class="font-brush text-4xl sm:text-5xl font-bold" style="color: #4A1A26;">¿Qué son los Rewards Pass y qué te ganas?</h3>
                         <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
                             Nuestro programa de lealtad premia tu preferencia cada vez que realizas un pedido en Hanami Sushi. Conforme avanzas de nivel, desbloqueas beneficios exclusivos diseñados para consentirte.
                         </p>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        <div class="bg-[#5C0B1B] text-white p-6 rounded-3xl border border-[#E4D4BA] shadow-md space-y-2">
-                            <span class="px-2.5 py-0.5 rounded-full bg-amber-300 text-slate-900 font-black text-[10px] inline-block">Nivel 10 Pedidos</span>
-                            <h4 class="font-bold text-sm text-amber-100">10% de Descuento Acumulado</h4>
-                            <p class="text-xs text-rose-100">Al completar tus primeros 10 pedidos entregados, obtienes un código de 10% de descuento automático.</p>
+                        <div class="bg-[#FDECEB] text-[#4A1A26] p-6 rounded-3xl border border-[#F3BCC4] shadow-md space-y-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-[#E3632C] text-white font-black text-[10px] inline-block">Nivel 10 Pedidos</span>
+                            <h4 class="font-bold text-sm text-[#4A1A26]">10% de Descuento Acumulado</h4>
+                            <p class="text-xs text-gray-600">Al completar tus primeros 10 pedidos entregados, obtienes un código de 10% de descuento automático.</p>
                         </div>
-                        <div class="bg-white p-6 rounded-3xl border-2 shadow-sm space-y-2" style="border-color: #E4D4BA;">
-                            <span class="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 font-black text-[10px] inline-block">Nivel 20 Pedidos</span>
-                            <h4 class="font-bold text-sm" style="color: #5C0B1B;">Envío Gratis Permanente</h4>
+                        <div class="bg-[#FBF6EC] p-6 rounded-3xl border-2 shadow-sm space-y-2" style="border-color: #F3ECDA;">
+                            <span class="px-2.5 py-0.5 rounded-full bg-[#FCE1D2] text-[#E3632C] font-black text-[10px] inline-block">Nivel 20 Pedidos</span>
+                            <h4 class="font-bold text-sm" style="color: #4A1A26;">Envío Gratis Permanente</h4>
                             <p class="text-xs text-gray-600">Al llegar a los 20 pedidos entregados, disfrutas de envío gratis en todas tus modalidades a domicilio.</p>
                         </div>
-                        <div class="bg-[#781428] text-white p-6 rounded-3xl border border-[#E4D4BA] shadow-md space-y-2">
-                            <span class="px-2.5 py-0.5 rounded-full bg-amber-300 text-slate-900 font-black text-[10px] inline-block">Nivel 50 Diamond</span>
-                            <h4 class="font-bold text-sm text-amber-100">Rollo Especial Gratis</h4>
-                            <p class="text-xs text-rose-100">Conviértete en Socio Diamond Gold y recibe un rollo de la casa gratis en tu cumpleaños.</p>
+                        <div class="bg-[#FDECEB] text-[#4A1A26] p-6 rounded-3xl border border-[#F3BCC4] shadow-md space-y-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-[#D43F79] text-white font-black text-[10px] inline-block">Nivel 50 Diamond</span>
+                            <h4 class="font-bold text-sm text-[#4A1A26]">Rollo Especial Gratis</h4>
+                            <p class="text-xs text-gray-600">Conviértete en Socio Diamond Gold y recibe un rollo de la casa gratis en tu cumpleaños.</p>
                         </div>
                     </div>
                 </div>
@@ -211,89 +409,193 @@
             </div>
         </section>
 
-        <!-- MENÚ A LA CARTA -->
-        <section *ngIf="clientSection === 'menu'" class="max-w-5xl mx-auto px-4 sm:px-8 pt-6 space-y-8">
-            <div class="bg-[#FAF8F5] rounded-3xl p-6 sm:p-8 border-2 shadow-xl text-center space-y-2" style="border-color: #E4D4BA;">
-                <span class="px-3.5 py-1 rounded-full bg-amber-100 text-amber-900 text-[10px] font-extrabold tracking-wider uppercase border inline-block" style="border-color: #E4D4BA;">
-                    TRADICIÓN NIPONA & SAZÓN MEXICANO
-                </span>
-                <h2 class="font-brush text-4xl sm:text-5xl font-bold" style="color: #5C0B1B;">Menú a la Carta</h2>
+        <!-- MENÚ A LA CARTA (SIN MENÚ LATERAL, PALETA 60·35·5) -->
+        <section *ngIf="clientSection === 'menu'" class="space-y-8">
+            
+            <!-- BANNER SUPERIOR SAKURA + BUSCADOR -->
+            <div class="w-full bg-[#FDECEB] border-y-2 py-8 px-4 sm:px-8 relative overflow-hidden" style="border-color: #F3ECDA;">
+                <div class="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div class="space-y-1.5">
+                        <span class="text-[10px] font-black tracking-[0.2em] uppercase text-[#E3632C] block">
+                            お品書き — NUESTRA CARTA
+                        </span>
+                        <h2 class="font-serif text-4xl sm:text-5xl font-bold" style="color: #4A1A26;">
+                            Menú Hanami
+                        </h2>
+                        <p class="text-xs text-gray-600 font-medium">
+                            Todo se prepara al momento. Tradición nipona y sazón mexicano en León, Gto.
+                        </p>
+                    </div>
+
+                    <div class="w-full md:w-80">
+                        <div class="relative">
+                            <input type="text"
+                                   [(ngModel)]="menuSearchQuery"
+                                   placeholder="Buscar un platillo o ingrediente..."
+                                   class="w-full pl-4 pr-10 py-2.5 rounded-full bg-[#FFFFFF] border text-xs font-normal text-[#4A1A26] shadow-sm focus:outline-none focus:border-[#E3632C]"
+                                   style="border-color: #F3ECDA;">
+                            <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="space-y-4">
-                <div *ngFor="let p of products"
-                     (click)="p.disponible !== 0 && p.disponible !== false && openCustomizeModal(p)"
-                     class="bg-[#FAF8F5] rounded-3xl p-4 sm:p-5 border-2 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition cursor-pointer"
-                     [ngClass]="{'opacity-60 grayscale cursor-not-allowed': p.disponible === 0 || p.disponible === false}"
-                     style="border-color: #E4D4BA;">
+            <!-- CONTENEDOR PRINCIPAL A ANCHO COMPLETO (SIN MENÚ LATERAL) -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-8 space-y-6">
+                
+                <!-- CHIPS DE FILTRO RÁPIDO -->
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+                        <button (click)="quickChip = 'todos'; selectedCategory = 'Todos'"
+                                class="px-4 py-1.5 rounded-full transition border"
+                                [style.background-color]="quickChip === 'todos' ? '#E3632C' : '#FFFFFF'"
+                                [style.color]="quickChip === 'todos' ? '#FFFFFF' : '#4A1A26'"
+                                style="border-color: #F3ECDA;">
+                            Todos los platillos
+                        </button>
+                        <button (click)="quickChip = quickChip === 'populares' ? 'todos' : 'populares'"
+                                class="px-4 py-1.5 rounded-full transition border"
+                                [style.background-color]="quickChip === 'populares' ? '#E3632C' : '#FFFFFF'"
+                                [style.color]="quickChip === 'populares' ? '#FFFFFF' : '#4A1A26'"
+                                style="border-color: #F3ECDA;">
+                            Más pedidos
+                        </button>
+                        <button (click)="quickChip = quickChip === 'salmon' ? 'todos' : 'salmon'"
+                                class="px-4 py-1.5 rounded-full transition border"
+                                [style.background-color]="quickChip === 'salmon' ? '#E3632C' : '#FFFFFF'"
+                                [style.color]="quickChip === 'salmon' ? '#FFFFFF' : '#4A1A26'"
+                                style="border-color: #F3ECDA;">
+                            Con salmón
+                        </button>
+                        
+                    </div>
 
-                    <div class="flex items-start sm:items-center gap-4 flex-1 min-w-0">
-                        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shrink-0 border border-[#E4D4BA] bg-white">
-                            <img [src]="p.image" [alt]="p.name" class="w-full h-full object-cover">
-                        </div>
+                    <button *ngIf="menuSearchQuery || selectedCategory !== 'Todos' || quickChip !== 'todos' || filterNoRaw || filterVeggie || filterSpicy"
+                            (click)="resetMenuFilters()"
+                            class="text-[11px] font-bold text-[#D43F79] hover:underline">
+                        Limpiar filtros
+                    </button>
+                </div>
 
-                        <div class="space-y-1 min-w-0">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <h3 class="font-brush text-2xl sm:text-3xl font-bold" style="color: #5C0B1B;">{{ p.name }}</h3>
-                                <span *ngIf="p.disponible === 0 || p.disponible === false" class="px-2.5 py-0.5 rounded-full bg-red-800 text-white font-black text-[10px] uppercase">
-                                    No disponible
+                <!-- ENCABEZADO DE SECCIÓN -->
+                <div class="flex items-center gap-2 border-b pb-2.5" style="border-color: #F3ECDA;">
+                    <span class="text-xs font-black text-[#E3632C]">桜</span>
+                    <h3 class="font-serif text-2xl font-bold" style="color: #4A1A26;">
+                        {{ selectedCategory === 'Todos' ? 'Especialidades de la Casa' : selectedCategory }}
+                    </h3>
+                    <span class="text-xs text-gray-400 font-medium ml-1">({{ getFilteredMenuProducts().length }})</span>
+                </div>
+
+                <!-- GRID DE PLATILLOS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <div *ngFor="let p of getFilteredMenuProducts()"
+                         (click)="p.disponible !== 0 && p.disponible !== false && openCustomizeModal(p)"
+                         class="bg-[#FFFFFF] rounded-2xl border overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between cursor-pointer group"
+                         [ngClass]="{'opacity-60 grayscale cursor-not-allowed': p.disponible === 0 || p.disponible === false}"
+                         style="border-color: #F3ECDA;">
+
+                        <div>
+                            <div class="h-44 w-full overflow-hidden bg-[#FBF6EC] relative">
+                                <img [src]="p.image" [alt]="p.name" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                                <span *ngIf="p.disponible === 0 || p.disponible === false"
+                                      class="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-[#4A1A26] text-white font-black text-[10px] uppercase">
+                                    Agotado
                                 </span>
                             </div>
-                            <p class="text-xs text-gray-600 leading-relaxed">{{ p.description }}</p>
-                            <p class="text-[11px] font-semibold text-rose-900">
-                                <b>Ingredientes:</b> {{ p.ingredients ? (p.ingredients.join ? p.ingredients.join(', ') : p.ingredients) : 'Ingredientes tradicionales' }}
-                            </p>
+
+                            <div class="p-4 space-y-1.5">
+                                <span class="text-[9px] font-bold uppercase tracking-wider text-[#D43F79] block">
+                                    {{ p.category || 'Especialidad' }}
+                                </span>
+                                <h4 class="font-serif text-lg font-bold leading-snug" style="color: #4A1A26;">
+                                    {{ p.name }}
+                                </h4>
+                                <p class="text-[11px] text-gray-500 line-clamp-2 leading-relaxed">
+                                    {{ p.description }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="px-4 pb-4 pt-2 flex items-center justify-between">
+                            <span class="text-sm font-black" style="color: #4A1A26;">
+                                ${{ p.price }}.00
+                            </span>
+
+                            <button *ngIf="p.disponible !== 0 && p.disponible !== false"
+                                    (click)="$event.stopPropagation(); openCustomizeModal(p)"
+                                    aria-label="Personalizar y agregar"
+                                    class="w-7 h-7 rounded-full bg-[#E3632C] hover:bg-[#4A1A26] text-white font-black text-sm flex items-center justify-center shadow transition">
+                                +
+                            </button>
+
+                            <span *ngIf="p.disponible === 0 || p.disponible === false"
+                                  class="text-[10px] font-bold text-gray-400">
+                                No disp.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div *ngIf="getFilteredMenuProducts().length === 0" class="bg-[#FFFFFF] rounded-3xl p-10 border text-center space-y-2" style="border-color: #F3ECDA;">
+                    <p class="text-sm font-bold" style="color: #4A1A26;">No encontramos platillos con ese filtro.</p>
+                    <button (click)="resetMenuFilters()" class="px-4 py-2 rounded-full bg-[#E3632C] text-white text-xs font-black">
+                        Ver todos los platillos
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- BARRA INFERIOR FLOTANTE CUANDO HAY PLATILLOS EN TU ORDEN -->
+            <div *ngIf="cart.length > 0" class="max-w-7xl mx-auto px-4 sm:px-8 pt-2">
+                <div class="bg-[#4A1A26] text-white rounded-2xl px-5 py-3.5 shadow-xl flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="w-7 h-7 rounded-lg bg-[#E3632C] text-white font-black text-xs flex items-center justify-center">
+                            {{ cart.length }}
+                        </span>
+                        <div>
+                            <span class="text-xs font-bold block">Tu orden · {{ cart.length }} platillo(s)</span>
+                            <span class="text-[10px] text-[#F3BCC4]">Preparación al momento · Hanami Sushi</span>
                         </div>
                     </div>
 
-                    <div class="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#E4D4BA]">
-                        <span class="px-3.5 py-1 rounded-full bg-[#5C0B1B] text-amber-100 text-xs font-black">
-                            ${{ p.price }}.00
-                        </span>
-
-                        <button *ngIf="p.disponible !== 0 && p.disponible !== false"
-                                (click)="$event.stopPropagation(); openCustomizeModal(p)"
-                                class="px-4 py-2.5 rounded-xl bg-amber-300 hover:bg-amber-400 text-slate-900 font-black text-xs shadow transition">
-                            + Personalizar y Agregar
-                        </button>
-
-                        <button *ngIf="p.disponible === 0 || p.disponible === false"
-                                disabled
-                                class="px-4 py-2.5 rounded-xl bg-gray-200 text-gray-400 font-bold text-xs cursor-not-allowed">
-                            Agotado
+                    <div class="flex items-center gap-4">
+                        <span class="text-base font-black text-[#FCE1D2]">${{ getCartTotal() }}.00</span>
+                        <button (click)="toggleBagDrawer()" class="px-4 py-2 rounded-xl bg-[#E3632C] hover:bg-[#D43F79] text-white font-black text-xs transition">
+                            Ver orden →
                         </button>
                     </div>
                 </div>
             </div>
+
         </section>
 
-        <!-- MIS PEDIDOS (ESTRUCTURA ANTERIOR CONSERVADA + REPETIR SOLO PRODUCTOS Y EXTRAS) -->
+        <!-- MIS PEDIDOS -->
         <section *ngIf="!isGuest && loggedEmail && clientSection === 'pedidos'" class="max-w-6xl mx-auto px-4 sm:px-8 pt-6 space-y-6">
-            <div class="bg-[#FAF8F5]/85 backdrop-blur-md rounded-3xl p-6 sm:p-8 border-2 shadow-xl border-[#E4D4BA]/60 space-y-6">
-                <div class="flex flex-wrap justify-between items-center border-b pb-4 gap-4" style="border-color: #E4D4BA;">
-                    <h3 class="font-brush text-3xl font-bold" style="color: #5C0B1B;">Historial de Órdenes</h3>
+            <div class="bg-[#FFFFFF]/90 backdrop-blur-md rounded-3xl p-6 sm:p-8 border-2 shadow-xl border-[#F3ECDA] space-y-6">
+                <div class="flex flex-wrap justify-between items-center border-b pb-4 gap-4" style="border-color: #F3ECDA;">
+                    <h3 class="font-brush text-3xl font-bold" style="color: #4A1A26;">Historial de Órdenes</h3>
                     
                     <div class="flex gap-2">
-                        <button (click)="orderTab = 'proceso'" [style.background-color]="orderTab==='proceso' ? '#781428' : 'white'" [style.color]="orderTab==='proceso' ? '#FFF' : '#5C0B1B'" class="px-4 py-2 rounded-xl text-xs font-black border border-[#E4D4BA] shadow-sm transition">
+                        <button (click)="orderTab = 'proceso'" [style.background-color]="orderTab==='proceso' ? '#E3632C' : '#FBF6EC'" [style.color]="orderTab==='proceso' ? '#FFFFFF' : '#4A1A26'" class="px-4 py-2 rounded-xl text-xs font-black border border-[#F3ECDA] shadow-sm transition">
                             En Proceso / Activos ({{ getOrdersByStatus('proceso').length }})
                         </button>
-                        <button (click)="orderTab = 'completados'" [style.background-color]="orderTab==='completados' ? '#781428' : 'white'" [style.color]="orderTab==='completados' ? '#FFF' : '#5C0B1B'" class="px-4 py-2 rounded-xl text-xs font-black border border-[#E4D4BA] shadow-sm transition">
+                        <button (click)="orderTab = 'completados'" [style.background-color]="orderTab==='completados' ? '#E3632C' : '#FBF6EC'" [style.color]="orderTab==='completados' ? '#FFFFFF' : '#4A1A26'" class="px-4 py-2 rounded-xl text-xs font-black border border-[#F3ECDA] shadow-sm transition">
                             Completados / Entregados ({{ getOrdersByStatus('completados').length }})
                         </button>
                     </div>
                 </div>
 
                 <div *ngIf="orderTab === 'proceso'" class="space-y-4">
-                    <div *ngFor="let o of getOrdersByStatus('proceso')" class="bg-white p-5 rounded-2xl border border-[#E4D4BA] shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <div *ngFor="let o of getOrdersByStatus('proceso')" class="bg-[#FBF6EC] p-5 rounded-2xl border border-[#F3ECDA] shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                         <div class="space-y-1">
-                            <span class="font-black text-sm" style="color: #5C0B1B;">Folio #{{ o.folio }}</span>
+                            <span class="font-black text-sm" style="color: #4A1A26;">Folio #{{ o.folio }}</span>
                             <p class="text-xs text-gray-700"><b>Platillos:</b> {{ o.itemsText }}</p>
-                            <p class="text-[11px] text-gray-500"><b>Tipo:</b> {{ o.type }} | <span class="text-amber-700 font-extrabold">Estado: {{ o.status }}</span></p>
-                            <p *ngIf="o.notes" class="text-[10px] text-rose-900 font-bold"><b>Notas:</b> {{ o.notes }}</p>
+                            <p class="text-[11px] text-gray-500"><b>Tipo:</b> {{ o.type }} | <span class="text-[#E3632C] font-extrabold">Estado: {{ o.status }}</span></p>
+                            <p *ngIf="o.notes" class="text-[10px] text-[#D43F79] font-bold"><b>Notas:</b> {{ o.notes }}</p>
                         </div>
                         <div class="flex items-center gap-3 shrink-0">
-                            <span class="font-black text-[#781428] text-base">${{ o.total }}.00</span>
-                            <button (click)="repeatOrderToCart(o)" class="px-4 py-2 rounded-xl bg-amber-300 hover:bg-amber-400 text-slate-900 font-black text-xs shadow transition">
+                            <span class="font-black text-[#E3632C] text-base">${{ o.total }}.00</span>
+                            <button (click)="repeatOrderToCart(o)" class="px-4 py-2 rounded-xl bg-[#E3632C] hover:bg-[#4A1A26] text-white font-black text-xs shadow transition">
                                 Repetir
                             </button>
                         </div>
@@ -302,7 +604,7 @@
                 </div>
 
                 <div *ngIf="orderTab === 'completados'" class="space-y-4">
-                    <div *ngFor="let o of getOrdersByStatus('completados')" class="bg-white p-5 rounded-2xl border border-[#E4D4BA] shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4 opacity-90">
+                    <div *ngFor="let o of getOrdersByStatus('completados')" class="bg-[#FBF6EC] p-5 rounded-2xl border border-[#F3ECDA] shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4 opacity-90">
                         <div class="space-y-1">
                             <span class="font-black text-sm text-emerald-800">Folio #{{ o.folio }} (Entregado)</span>
                             <p class="text-xs text-gray-700"><b>Platillos:</b> {{ o.itemsText }}</p>
@@ -310,7 +612,7 @@
                         </div>
                         <div class="flex items-center gap-3 shrink-0">
                             <span class="font-black text-gray-700 text-base">${{ o.total }}.00</span>
-                            <button (click)="repeatOrderToCart(o)" class="px-4 py-2 rounded-xl bg-amber-300 hover:bg-amber-400 text-slate-900 font-black text-xs shadow transition">
+                            <button (click)="repeatOrderToCart(o)" class="px-4 py-2 rounded-xl bg-[#E3632C] hover:bg-[#4A1A26] text-white font-black text-xs shadow transition">
                                 Repetir
                             </button>
                         </div>
@@ -320,30 +622,30 @@
             </div>
         </section>
 
-        <!-- RESERVAR MESA (CON BARRA/FONDO DE COLOR PARA QUE RESALTE) -->
+        <!-- RESERVAR MESA -->
         <section *ngIf="!isGuest && loggedEmail && clientSection === 'reservas'" class="max-w-6xl mx-auto px-4 sm:px-8 pt-6 space-y-8">
-            <div class="bg-[#5C0B1B] text-white rounded-[2.5rem] p-6 sm:p-10 border-2 shadow-2xl space-y-8" style="border-color: #E4D4BA;">
-                <div class="border-b border-amber-200/30 pb-4">
-                    <span class="px-3.5 py-1 rounded-full bg-amber-300 text-slate-900 text-[10px] font-black uppercase inline-block">SUCURSAL HANAMI</span>
-                    <h2 class="font-brush text-4xl sm:text-5xl font-bold text-amber-100 mt-2">RESERVA TU MESA</h2>
+            <div class="bg-[#FFFFFF] text-[#4A1A26] rounded-[2.5rem] p-6 sm:p-10 border-2 shadow-2xl space-y-8" style="border-color: #F3ECDA;">
+                <div class="border-b border-[#F3ECDA] pb-4">
+                    <span class="px-3.5 py-1 rounded-full bg-[#FCE1D2] text-[#E3632C] text-[10px] font-black uppercase inline-block">SUCURSAL HANAMI</span>
+                    <h2 class="font-brush text-4xl sm:text-5xl font-bold text-[#4A1A26] mt-2">RESERVA TU MESA</h2>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                    <div class="lg:col-span-7 bg-[#FAF8F5] text-[#5C0B1B] rounded-[2rem] p-6 border-2 shadow-lg space-y-5" style="border-color: #E4D4BA;">
+                    <div class="lg:col-span-7 bg-[#FBF6EC] text-[#4A1A26] rounded-[2rem] p-6 border-2 shadow-lg space-y-5" style="border-color: #F3ECDA;">
                         <h3 class="font-bold text-sm">Datos de tu Reserva</h3>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold">
                             <div>
                                 <label class="block mb-1">FECHA</label>
-                                <input type="date" [(ngModel)]="newReservation.fecha" class="w-full px-3.5 py-2.5 rounded-xl border bg-white text-xs font-normal" style="border-color: #E4D4BA;">
+                                <input type="date" [(ngModel)]="newReservation.fecha" class="w-full px-3.5 py-2.5 rounded-xl border bg-white text-xs font-normal" style="border-color: #F3ECDA;">
                             </div>
                             <div>
                                 <label class="block mb-1">PERSONAS</label>
-                                <input type="number" min="1" max="10" [(ngModel)]="newReservation.personas" class="w-full px-3.5 py-2.5 rounded-xl border bg-white text-xs font-normal" style="border-color: #E4D4BA;">
+                                <input type="number" min="1" max="10" [(ngModel)]="newReservation.personas" class="w-full px-3.5 py-2.5 rounded-xl border bg-white text-xs font-normal" style="border-color: #F3ECDA;">
                             </div>
                             <div>
                                 <label class="block mb-1">HORARIO</label>
-                                <select [(ngModel)]="newReservation.horario" class="w-full px-3.5 py-2.5 rounded-xl border bg-white text-xs font-normal" style="border-color: #E4D4BA;">
+                                <select [(ngModel)]="newReservation.horario" class="w-full px-3.5 py-2.5 rounded-xl border bg-white text-xs font-normal" style="border-color: #F3ECDA;">
                                     <option value="" disabled selected>Elige un horario...</option>
                                     <option value="14:00 - 15:30">14:00 - 15:30 hrs</option>
                                     <option value="16:00 - 17:30">16:00 - 17:30 hrs</option>
@@ -353,7 +655,7 @@
                             </div>
                             <div>
                                 <label class="block mb-1">MESA</label>
-                                <select [(ngModel)]="newReservation.mesa" class="w-full px-3.5 py-2.5 rounded-xl border bg-white text-xs font-normal" style="border-color: #E4D4BA;">
+                                <select [(ngModel)]="newReservation.mesa" class="w-full px-3.5 py-2.5 rounded-xl border bg-white text-xs font-normal" style="border-color: #F3ECDA;">
                                     <option value="1">Mesa 1 (Ventana Principal)</option>
                                     <option value="2">Mesa 2 (Barra Central)</option>
                                     <option value="3">Mesa 3 (Salón Privado)</option>
@@ -363,37 +665,37 @@
                         </div>
                     </div>
 
-                    <div class="lg:col-span-5 bg-[#781428] text-white rounded-[2rem] p-6 border-2 shadow-lg space-y-5" style="border-color: #E4D4BA;">
-                        <span class="text-[10px] font-black uppercase tracking-widest text-amber-300 block">TU RESERVA</span>
-                        <h3 class="font-brush text-4xl font-bold text-amber-100">
+                    <div class="lg:col-span-5 bg-[#FDECEB] text-[#4A1A26] rounded-[2rem] p-6 border-2 shadow-lg space-y-5" style="border-color: #F3BCC4;">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#E3632C] block">TU RESERVA</span>
+                        <h3 class="font-brush text-4xl font-bold text-[#4A1A26]">
                             {{ newReservation.fecha || 'Fecha pendiente' }} · {{ newReservation.horario || 'Horario' }}
                         </h3>
-                        <div class="text-xs text-rose-100 space-y-1">
+                        <div class="text-xs text-gray-700 space-y-1">
                             <p><b>Personas:</b> {{ newReservation.personas }} comensales</p>
                             <p><b>Mesa:</b> Mesa #{{ newReservation.mesa }}</p>
                             <p><b>A nombre de:</b> {{ userProfile.name }} {{ userProfile.lastName }}</p>
                             <p *ngIf="userProfile.phone"><b>Teléfono:</b> {{ userProfile.phone }}</p>
                         </div>
-                        <button (click)="crearReservaMesa()" class="w-full py-3.5 rounded-2xl bg-amber-300 hover:bg-amber-400 text-slate-900 font-black text-xs shadow-lg transition">
+                        <button (click)="crearReservaMesa()" class="w-full py-3.5 rounded-2xl bg-[#E3632C] hover:bg-[#4A1A26] text-white font-black text-xs shadow-lg transition">
                             Confirmar reserva
                         </button>
                     </div>
                 </div>
 
                 <!-- MIS RESERVAS CON CANCELAR -->
-                <div class="bg-[#FAF8F5] text-[#5C0B1B] rounded-[2rem] p-6 border-2 shadow-lg space-y-4" style="border-color: #E4D4BA;">
+                <div class="bg-[#FBF6EC] text-[#4A1A26] rounded-[2rem] p-6 border-2 shadow-lg space-y-4" style="border-color: #F3ECDA;">
                     <h3 class="font-brush text-3xl font-bold">MIS RESERVAS</h3>
                     <div class="space-y-3">
-                        <div *ngFor="let r of misReservas" class="bg-white p-4 sm:p-5 rounded-2xl border flex items-center justify-between gap-4" style="border-color: #E4D4BA;">
+                        <div *ngFor="let r of misReservas" class="bg-white p-4 sm:p-5 rounded-2xl border flex items-center justify-between gap-4" style="border-color: #F3ECDA;">
                             <div class="space-y-0.5">
-                                <p class="text-sm font-bold" style="color: #5C0B1B;">Mesa #{{ r.mesa }} · {{ r.personas }} personas · {{ r.fecha }} · {{ r.horario }}</p>
+                                <p class="text-sm font-bold" style="color: #4A1A26;">Mesa #{{ r.mesa }} · {{ r.personas }} personas · {{ r.fecha }} · {{ r.horario }}</p>
                                 <p class="text-xs text-emerald-700 font-bold">{{ r.estado }}</p>
                             </div>
-                            <button (click)="cancelarReserva(r.id)" class="px-4 py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-800 text-xs font-black transition">
+                            <button (click)="cancelarReserva(r.id)" class="px-4 py-2 rounded-xl bg-[#FDECEB] hover:bg-[#F3BCC4] text-[#D43F79] text-xs font-black transition">
                                 Cancelar
                             </button>
                         </div>
-                        <div *ngIf="misReservas.length === 0" class="text-center py-8 bg-white rounded-2xl border text-gray-500 font-bold text-xs" style="border-color: #E4D4BA;">
+                        <div *ngIf="misReservas.length === 0" class="text-center py-8 bg-white rounded-2xl border text-gray-500 font-bold text-xs" style="border-color: #F3ECDA;">
                             No tienes reservas activas por el momento.
                         </div>
                     </div>
@@ -404,101 +706,101 @@
         <!-- CLUB HANAMI & CUPONES -->
         <section *ngIf="!isGuest && loggedEmail && clientSection === 'rewards'" class="max-w-6xl mx-auto px-4 sm:px-8 pt-6 space-y-8">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-                <div class="lg:col-span-6 bg-[#781428] text-white rounded-[2.5rem] p-6 sm:p-8 border-2 shadow-xl flex flex-col justify-between space-y-5" style="border-color: #E4D4BA;">
+                <div class="lg:col-span-6 bg-[#E3632C] text-white rounded-[2.5rem] p-6 sm:p-8 border-2 shadow-xl flex flex-col justify-between space-y-5" style="border-color: #F3ECDA;">
                     <div class="space-y-2">
-                        <span class="text-[10px] font-black uppercase tracking-widest text-amber-300 block">CLUB HANAMI · NIVEL ACTUAL</span>
-                        <h2 class="font-brush text-5xl font-bold text-amber-100">{{ getCurrentTierName() }}</h2>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#FCE1D2] block">CLUB HANAMI · NIVEL ACTUAL</span>
+                        <h2 class="font-brush text-5xl font-bold text-white">{{ getCurrentTierName() }}</h2>
                     </div>
 
                     <div class="space-y-2">
-                        <div class="flex justify-between text-xs font-bold text-amber-200">
+                        <div class="flex justify-between text-xs font-bold text-[#FDECEB]">
                             <span>Progreso de Lealtad</span>
                             <span>{{ getCompletedOrdersCount() }} pedidos entregados ({{ getTierProgressPercentage() }}%)</span>
                         </div>
-                        <div class="w-full bg-black/30 h-3 rounded-full overflow-hidden">
-                            <div class="bg-amber-300 h-full rounded-full transition-all duration-500" [style.width.%]="getTierProgressPercentage()"></div>
+                        <div class="w-full bg-black/20 h-3 rounded-full overflow-hidden">
+                            <div class="bg-[#FFFFFF] h-full rounded-full transition-all duration-500" [style.width.%]="getTierProgressPercentage()"></div>
                         </div>
                     </div>
 
                     <div class="flex flex-wrap gap-3 pt-1">
-                        <button (click)="setClientSection('menu')" class="px-5 py-2.5 rounded-xl bg-amber-300 hover:bg-amber-400 text-slate-900 font-black text-xs shadow transition">
+                        <button (click)="setClientSection('menu')" class="px-5 py-2.5 rounded-xl bg-[#FFFFFF] hover:bg-[#FDECEB] text-[#4A1A26] font-black text-xs shadow transition">
                             Pedir ahora
                         </button>
-                        <button (click)="toggleBagDrawer()" class="px-5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-amber-100 font-bold text-xs border border-amber-200/40 transition">
+                        <button (click)="toggleBagDrawer()" class="px-5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/40 transition">
                             Ver mi orden
                         </button>
                     </div>
                 </div>
 
                 <div class="lg:col-span-6 space-y-3">
-                    <div class="bg-[#FAF8F5] p-4 rounded-2xl border-2 flex items-center justify-between gap-3" style="border-color: #E4D4BA;">
+                    <div class="bg-[#FFFFFF] p-4 rounded-2xl border-2 flex items-center justify-between gap-3" style="border-color: #F3ECDA;">
                         <div class="flex items-center gap-3">
-                            <span class="w-8 h-8 rounded-xl bg-[#781428] text-amber-100 font-black text-xs flex items-center justify-center shrink-0">1</span>
+                            <span class="w-8 h-8 rounded-xl bg-[#E3632C] text-white font-black text-xs flex items-center justify-center shrink-0">1</span>
                             <div>
-                                <p class="text-xs font-black" style="color: #5C0B1B;">Nivel Bronce · 0 - 5 pedidos</p>
+                                <p class="text-xs font-black" style="color: #4A1A26;">Nivel Bronce · 0 - 5 pedidos</p>
                                 <p class="text-[11px] text-gray-600">Nivel inicial para nuevos socios con acceso a menú general.</p>
                             </div>
                         </div>
-                        <span class="text-[10px] font-black text-[#781428] shrink-0">BRONZE</span>
+                        <span class="text-[10px] font-black text-[#E3632C] shrink-0">BRONZE</span>
                     </div>
 
-                    <div class="bg-[#FAF8F5] p-4 rounded-2xl border-2 flex items-center justify-between gap-3" style="border-color: #E4D4BA;">
+                    <div class="bg-[#FFFFFF] p-4 rounded-2xl border-2 flex items-center justify-between gap-3" style="border-color: #F3ECDA;">
                         <div class="flex items-center gap-3">
-                            <span class="w-8 h-8 rounded-xl bg-[#781428] text-amber-100 font-black text-xs flex items-center justify-center shrink-0">2</span>
+                            <span class="w-8 h-8 rounded-xl bg-[#E3632C] text-white font-black text-xs flex items-center justify-center shrink-0">2</span>
                             <div>
-                                <p class="text-xs font-black" style="color: #5C0B1B;">Nivel Plata · 6 - 15 pedidos</p>
+                                <p class="text-xs font-black" style="color: #4A1A26;">Nivel Plata · 6 - 15 pedidos</p>
                                 <p class="text-[11px] text-gray-600">Desbloquea 10% de descuento en especialidades seleccionadas.</p>
                             </div>
                         </div>
-                        <span class="text-[10px] font-black text-[#781428] shrink-0">PLATA</span>
+                        <span class="text-[10px] font-black text-[#E3632C] shrink-0">PLATA</span>
                     </div>
 
-                    <div class="bg-[#FAF8F5] p-4 rounded-2xl border-2 flex items-center justify-between gap-3" style="border-color: #E4D4BA;">
+                    <div class="bg-[#FFFFFF] p-4 rounded-2xl border-2 flex items-center justify-between gap-3" style="border-color: #F3ECDA;">
                         <div class="flex items-center gap-3">
-                            <span class="w-8 h-8 rounded-xl bg-[#781428] text-amber-100 font-black text-xs flex items-center justify-center shrink-0">3</span>
+                            <span class="w-8 h-8 rounded-xl bg-[#E3632C] text-white font-black text-xs flex items-center justify-center shrink-0">3</span>
                             <div>
-                                <p class="text-xs font-black" style="color: #5C0B1B;">Nivel Oro · 16 - 30 pedidos</p>
+                                <p class="text-xs font-black" style="color: #4A1A26;">Nivel Oro · 16 - 30 pedidos</p>
                                 <p class="text-[11px] text-gray-600">Envío gratis permanente en tus pedidos a domicilio.</p>
                             </div>
                         </div>
-                        <span class="text-[10px] font-black text-[#781428] shrink-0">ORO</span>
+                        <span class="text-[10px] font-black text-[#E3632C] shrink-0">ORO</span>
                     </div>
 
-                    <div class="bg-[#FAF8F5] p-4 rounded-2xl border-2 flex items-center justify-between gap-3" style="border-color: #E4D4BA;">
+                    <div class="bg-[#FFFFFF] p-4 rounded-2xl border-2 flex items-center justify-between gap-3" style="border-color: #F3ECDA;">
                         <div class="flex items-center gap-3">
-                            <span class="w-8 h-8 rounded-xl bg-[#781428] text-amber-100 font-black text-xs flex items-center justify-center shrink-0">4</span>
+                            <span class="w-8 h-8 rounded-xl bg-[#D43F79] text-white font-black text-xs flex items-center justify-center shrink-0">4</span>
                             <div>
-                                <p class="text-xs font-black" style="color: #5C0B1B;">Nivel Platinum · 31 - 50 pedidos</p>
+                                <p class="text-xs font-black" style="color: #4A1A26;">Nivel Platinum · 31 - 50 pedidos</p>
                                 <p class="text-[11px] text-gray-600">Mesas VIP exclusivas, rollo de la casa gratis y 20% de descuento acumulado.</p>
                             </div>
                         </div>
-                        <span class="text-[10px] font-black text-[#781428] shrink-0">PLATINUM</span>
+                        <span class="text-[10px] font-black text-[#D43F79] shrink-0">PLATINUM</span>
                     </div>
 
-                    <div class="bg-[#FAF8F5] p-4 rounded-2xl border-2 flex items-center justify-between gap-3" style="border-color: #E4D4BA;">
+                    <div class="bg-[#FFFFFF] p-4 rounded-2xl border-2 flex items-center justify-between gap-3" style="border-color: #F3ECDA;">
                         <div class="flex items-center gap-3">
-                            <span class="w-8 h-8 rounded-xl bg-[#781428] text-amber-100 font-black text-xs flex items-center justify-center shrink-0">5</span>
+                            <span class="w-8 h-8 rounded-xl bg-[#4A1A26] text-white font-black text-xs flex items-center justify-center shrink-0">5</span>
                             <div>
-                                <p class="text-xs font-black" style="color: #5C0B1B;">Nivel Diamond Elite · 51+ pedidos</p>
+                                <p class="text-xs font-black" style="color: #4A1A26;">Nivel Diamond Elite · 51+ pedidos</p>
                                 <p class="text-[11px] text-gray-600">Categoría máxima: Banquete de cortesía en tu cumpleaños y atención personalizada.</p>
                             </div>
                         </div>
-                        <span class="text-[10px] font-black text-[#781428] shrink-0">DIAMOND</span>
+                        <span class="text-[10px] font-black text-[#4A1A26] shrink-0">DIAMOND</span>
                     </div>
                 </div>
             </div>
 
             <div class="space-y-4">
-                <h3 class="font-brush text-4xl font-bold" style="color: #5C0B1B;">TUS CUPONES</h3>
+                <h3 class="font-brush text-4xl font-bold" style="color: #4A1A26;">TUS CUPONES</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    <div *ngFor="let reward of availableRewards" class="bg-[#FAF8F5] rounded-3xl p-6 border-2 shadow-md flex flex-col justify-between space-y-4" style="border-color: #E4D4BA;">
+                    <div *ngFor="let reward of availableRewards" class="bg-[#FFFFFF] rounded-3xl p-6 border-2 shadow-md flex flex-col justify-between space-y-4" style="border-color: #F3ECDA;">
                         <div class="space-y-1.5">
-                            <span class="text-[10px] font-black uppercase text-[#781428]">{{ reward.tierRequired }} · 1 solo uso</span>
-                            <h4 class="font-brush text-3xl font-bold" style="color: #5C0B1B;">{{ reward.discountPercent }}% OFF</h4>
+                            <span class="text-[10px] font-black uppercase text-[#E3632C]">{{ reward.tierRequired }} · 1 solo uso</span>
+                            <h4 class="font-brush text-3xl font-bold" style="color: #4A1A26;">{{ reward.discountPercent }}% OFF</h4>
                             <p class="text-xs font-bold text-slate-800">{{ reward.title }}</p>
                             <p class="text-[11px] text-gray-600">{{ reward.description }}</p>
                         </div>
-                        <button *ngIf="reward.unlocked" (click)="canjearBoleto(reward)" class="w-full py-2.5 rounded-xl bg-amber-300 hover:bg-amber-400 text-slate-900 font-black text-xs shadow transition">
+                        <button *ngIf="reward.unlocked" (click)="canjearBoleto(reward)" class="w-full py-2.5 rounded-xl bg-[#E3632C] hover:bg-[#4A1A26] text-white font-black text-xs shadow transition">
                             {{ appliedCoupon?.code === reward.code ? 'Aplicado ✓' : 'Usar en mi orden' }}
                         </button>
                         <button *ngIf="!reward.unlocked" disabled class="w-full py-2.5 rounded-xl bg-gray-200 text-gray-400 font-bold text-xs cursor-not-allowed">
@@ -506,8 +808,8 @@
                         </button>
                     </div>
 
-                    <div *ngIf="availableRewards.length === 0" class="md:col-span-3 bg-[#FAF8F5] p-6 rounded-3xl border-2 text-center space-y-1" style="border-color: #E4D4BA;">
-                        <p class="text-xs font-bold text-[#5C0B1B]">Ya canjeaste todos tus cupones disponibles.</p>
+                    <div *ngIf="availableRewards.length === 0" class="md:col-span-3 bg-[#FFFFFF] p-6 rounded-3xl border-2 text-center space-y-1" style="border-color: #F3ECDA;">
+                        <p class="text-xs font-bold text-[#4A1A26]">Ya canjeaste todos tus cupones disponibles.</p>
                     </div>
                 </div>
             </div>
@@ -515,49 +817,49 @@
 
         <!-- PERFIL & DIRECCIONES SECUNDARIAS EN BASE DE DATOS -->
         <section *ngIf="!isGuest && loggedEmail && clientSection === 'perfil'" class="max-w-2xl mx-auto px-4 sm:px-8 pt-6 space-y-6">
-            <div class="bg-[#FAF8F5] rounded-3xl border-2 shadow-xl p-8 space-y-6" style="border-color: #E4D4BA;">
-                <h2 class="font-brush text-3xl font-bold" style="color: #5C0B1B;">Mi Perfil Hanami & Direcciones</h2>
-                <div class="space-y-4 text-xs font-bold" style="color: #5C0B1B;">
+            <div class="bg-[#FFFFFF] rounded-3xl border-2 shadow-xl p-8 space-y-6" style="border-color: #F3ECDA;">
+                <h2 class="font-brush text-3xl font-bold" style="color: #4A1A26;">Mi Perfil Hanami & Direcciones</h2>
+                <div class="space-y-4 text-xs font-bold" style="color: #4A1A26;">
                     <div>
                         <label class="block mb-1">Nombre(s)</label>
-                        <input type="text" [(ngModel)]="userProfile.name" class="w-full px-4 py-2.5 rounded-xl bg-white border text-xs font-normal" style="border-color: #E4D4BA;">
+                        <input type="text" [(ngModel)]="userProfile.name" class="w-full px-4 py-2.5 rounded-xl bg-[#FBF6EC] border text-xs font-normal" style="border-color: #F3ECDA;">
                     </div>
                     <div>
                         <label class="block mb-1">Apellidos</label>
-                        <input type="text" [(ngModel)]="userProfile.lastName" class="w-full px-4 py-2.5 rounded-xl bg-white border text-xs font-normal" style="border-color: #E4D4BA;">
+                        <input type="text" [(ngModel)]="userProfile.lastName" class="w-full px-4 py-2.5 rounded-xl bg-[#FBF6EC] border text-xs font-normal" style="border-color: #F3ECDA;">
                     </div>
                     <div>
                         <label class="block mb-1">Correo Electrónico (Usuario)</label>
-                        <input type="email" [(ngModel)]="userProfile.email" disabled class="w-full px-4 py-2.5 rounded-xl bg-gray-100 border text-xs font-normal text-gray-500 cursor-not-allowed" style="border-color: #E4D4BA;">
+                        <input type="email" [(ngModel)]="userProfile.email" disabled class="w-full px-4 py-2.5 rounded-xl bg-gray-100 border text-xs font-normal text-gray-500 cursor-not-allowed" style="border-color: #F3ECDA;">
                     </div>
                     <div>
                         <label class="block mb-1">Teléfono de Contacto</label>
-                        <input type="text" [(ngModel)]="userProfile.phone" maxlength="10" class="w-full px-4 py-2.5 rounded-xl bg-white border text-xs font-normal" style="border-color: #E4D4BA;">
+                        <input type="text" [(ngModel)]="userProfile.phone" maxlength="10" class="w-full px-4 py-2.5 rounded-xl bg-[#FBF6EC] border text-xs font-normal" style="border-color: #F3ECDA;">
                     </div>
                     <div>
                         <label class="block mb-1">Dirección Principal (Base de Datos)</label>
-                        <input type="text" [(ngModel)]="userProfile.address" class="w-full px-4 py-2.5 rounded-xl bg-white border text-xs font-normal" style="border-color: #E4D4BA;">
+                        <input type="text" [(ngModel)]="userProfile.address" class="w-full px-4 py-2.5 rounded-xl bg-[#FBF6EC] border text-xs font-normal" style="border-color: #F3ECDA;">
                     </div>
 
-                    <div class="space-y-2 pt-2 border-t" style="border-color: #E4D4BA;">
+                    <div class="space-y-2 pt-2 border-t" style="border-color: #F3ECDA;">
                         <label class="block text-sm">Direcciones Secundarias (Guardadas en BD):</label>
-                        <div *ngFor="let addr of userAddresses" class="flex items-center justify-between bg-white p-3 rounded-xl border" style="border-color: #E4D4BA;">
+                        <div *ngFor="let addr of userAddresses" class="flex items-center justify-between bg-[#FBF6EC] p-3 rounded-xl border" style="border-color: #F3ECDA;">
                             <div>
-                                <span class="font-extrabold text-[#781428] block">{{ addr.label }}</span>
+                                <span class="font-extrabold text-[#E3632C] block">{{ addr.label }}</span>
                                 <span class="text-gray-600 font-normal">{{ addr.full }}</span>
                             </div>
-                            <button (click)="removeAddress(addr)" class="text-red-700 text-xs font-bold">Eliminar</button>
+                            <button (click)="removeAddress(addr)" class="text-[#D43F79] text-xs font-bold">Eliminar</button>
                         </div>
                         <div *ngIf="userAddresses.length === 0" class="text-gray-500 text-[11px] italic">No tienes direcciones secundarias guardadas.</div>
 
                         <div class="flex gap-2 pt-2">
-                            <input type="text" [(ngModel)]="newAddressLabel" placeholder="Etiqueta (ej. Oficina)" class="w-1/3 px-3 py-2 rounded-xl bg-white border text-xs font-normal">
-                            <input type="text" [(ngModel)]="newAddressFull" placeholder="Dirección completa..." class="w-2/3 px-3 py-2 rounded-xl bg-white border text-xs font-normal">
+                            <input type="text" [(ngModel)]="newAddressLabel" placeholder="Etiqueta (ej. Oficina)" class="w-1/3 px-3 py-2 rounded-xl bg-[#FBF6EC] border text-xs font-normal">
+                            <input type="text" [(ngModel)]="newAddressFull" placeholder="Dirección completa..." class="w-2/3 px-3 py-2 rounded-xl bg-[#FBF6EC] border text-xs font-normal">
                         </div>
-                        <button (click)="addNewAddress()" class="px-4 py-2 bg-amber-200 text-amber-900 rounded-xl text-xs font-bold mt-1">+ Agregar Dirección Secundaria a BD</button>
+                        <button (click)="addNewAddress()" class="px-4 py-2 bg-[#FCE1D2] text-[#4A1A26] rounded-xl text-xs font-bold mt-1">+ Agregar Dirección Secundaria a BD</button>
                     </div>
 
-                    <button (click)="saveProfileChanges()" class="w-full py-3.5 rounded-2xl bg-amber-300 hover:bg-amber-400 text-slate-900 font-black text-xs shadow-lg mt-4">
+                    <button (click)="saveProfileChanges()" class="w-full py-3.5 rounded-2xl bg-[#E3632C] hover:bg-[#4A1A26] text-white font-black text-xs shadow-lg mt-4">
                         Guardar Cambios de Perfil ➔
                     </button>
                 </div>
@@ -567,50 +869,50 @@
 
     <!-- PANEL LATERAL AL PULSAR EL ÍCONO DE PEDIDO (TU ORDEN) -->
     <div *ngIf="showBagDrawer" class="fixed inset-0 z-50 bg-black/50 flex justify-end">
-        <div class="bg-[#FAF8F5] w-full max-w-md h-full p-6 border-l-2 shadow-2xl overflow-y-auto flex flex-col justify-between space-y-6" style="border-color: #781428;">
+        <div class="bg-[#FBF6EC] w-full max-w-md h-full p-6 border-l-2 shadow-2xl overflow-y-auto flex flex-col justify-between space-y-6" style="border-color: #E3632C;">
             <div class="space-y-5">
-                <div class="flex items-center justify-between border-b pb-3" style="border-color: #E4D4BA;">
-                    <h3 class="font-brush text-3xl font-bold" style="color: #5C0B1B;">Tu Orden</h3>
-                    <button (click)="showBagDrawer = false" class="text-xl font-bold text-gray-600 hover:text-red-700">✕</button>
+                <div class="flex items-center justify-between border-b pb-3" style="border-color: #F3ECDA;">
+                    <h3 class="font-brush text-3xl font-bold" style="color: #4A1A26;">Tu Orden</h3>
+                    <button (click)="showBagDrawer = false" class="text-xl font-bold text-gray-600 hover:text-[#D43F79]">✕</button>
                 </div>
 
                 <div class="space-y-3">
-                    <div *ngFor="let item of cart" class="bg-white rounded-2xl p-4 border shadow-sm flex items-center justify-between gap-3" style="border-color: #E4D4BA;">
+                    <div *ngFor="let item of cart" class="bg-[#FFFFFF] rounded-2xl p-4 border shadow-sm flex items-center justify-between gap-3" style="border-color: #F3ECDA;">
                         <div class="space-y-1 min-w-0">
-                            <h4 class="font-bold text-sm" style="color: #5C0B1B;">{{ item.name }}</h4>
+                            <h4 class="font-bold text-sm" style="color: #4A1A26;">{{ item.name }}</h4>
                             <p class="text-[11px] text-gray-600" *ngIf="item.customDetails"><b>Detalle:</b> {{ item.customDetails }}</p>
-                            <span class="text-xs font-extrabold text-rose-900 block">${{ item.unitPrice }}.00 c/u</span>
+                            <span class="text-xs font-extrabold text-[#D43F79] block">${{ item.unitPrice }}.00 c/u</span>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
-                            <div class="flex items-center gap-2 bg-[#FAF5EC] px-2.5 py-1.5 rounded-xl border border-[#E4D4BA]">
+                            <div class="flex items-center gap-2 bg-[#FDECEB] px-2.5 py-1.5 rounded-xl border border-[#F3BCC4]">
                                 <button (click)="updateCartQty(item, -1)" class="font-black text-xs">-</button>
                                 <span class="font-black text-xs">{{ item.qty }}</span>
                                 <button (click)="updateCartQty(item, 1)" class="font-black text-xs">+</button>
                             </div>
-                            <span class="font-black text-sm" style="color: #781428;">${{ item.unitPrice * item.qty }}.00</span>
+                            <span class="font-black text-sm" style="color: #E3632C;">${{ item.unitPrice * item.qty }}.00</span>
                         </div>
                     </div>
 
-                    <div *ngIf="cart.length === 0" class="text-center py-10 bg-white rounded-2xl border border-[#E4D4BA]">
+                    <div *ngIf="cart.length === 0" class="text-center py-10 bg-[#FFFFFF] rounded-2xl border border-[#F3ECDA]">
                         <p class="text-xs text-gray-500 font-bold">No hay platillos agregados.</p>
-                        <button (click)="showBagDrawer = false; setClientSection('menu')" class="mt-3 px-5 py-2.5 rounded-xl bg-amber-300 text-slate-900 font-black text-xs">Ver Menú a la Carta</button>
+                        <button (click)="showBagDrawer = false; setClientSection('menu')" class="mt-3 px-5 py-2.5 rounded-xl bg-[#E3632C] text-white font-black text-xs">Ver Menú a la Carta</button>
                     </div>
                 </div>
 
-                <div *ngIf="cart.length > 0" class="bg-white rounded-2xl p-4 border space-y-2 text-xs font-bold" style="border-color: #E4D4BA; color: #5C0B1B;">
+                <div *ngIf="cart.length > 0" class="bg-[#FFFFFF] rounded-2xl p-4 border space-y-2 text-xs font-bold" style="border-color: #F3ECDA; color: #4A1A26;">
                     <label class="block text-[11px]">Canjear Boleto / Cupón Club Hanami (1 solo uso):</label>
                     <div class="flex gap-2">
-                        <input type="text" [(ngModel)]="couponInputCode" placeholder="Ej. HANAMI10" class="w-2/3 px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#E4D4BA] text-xs font-normal uppercase">
-                        <button (click)="aplicarCodigoCupon()" class="w-1/3 px-2 py-2 rounded-xl bg-amber-300 hover:bg-amber-400 text-slate-900 text-[11px] font-black">Aplicar</button>
+                        <input type="text" [(ngModel)]="couponInputCode" placeholder="Ej. HANAMI10" class="w-2/3 px-3 py-2 rounded-xl bg-[#FBF6EC] border border-[#F3ECDA] text-xs font-normal uppercase">
+                        <button (click)="aplicarCodigoCupon()" class="w-1/3 px-2 py-2 rounded-xl bg-[#E3632C] hover:bg-[#4A1A26] text-white text-[11px] font-black">Aplicar</button>
                     </div>
                     <div *ngIf="appliedCoupon" class="flex items-center justify-between bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl text-[11px] text-emerald-900">
                         <span>Boleto <b>{{ appliedCoupon.code }}</b> (-{{ appliedCoupon.discountPercent }}%)</span>
-                        <button (click)="quitarCupon()" class="text-red-700 font-black">Quitar</button>
+                        <button (click)="quitarCupon()" class="text-[#D43F79] font-black">Quitar</button>
                     </div>
                 </div>
             </div>
 
-            <div *ngIf="cart.length > 0" class="border-t pt-4 space-y-3 border-[#E4D4BA]">
+            <div *ngIf="cart.length > 0" class="border-t pt-4 space-y-3 border-[#F3ECDA]">
                 <div class="flex justify-between text-xs font-bold text-gray-600">
                     <span>Subtotal:</span>
                     <span>${{ getCartSubtotal() }}.00 MXN</span>
@@ -619,11 +921,11 @@
                     <span>Descuento ({{ appliedCoupon?.code }}):</span>
                     <span>-${{ getDiscountAmount() }}.00 MXN</span>
                 </div>
-                <div class="flex justify-between text-sm font-extrabold" style="color: #5C0B1B;">
+                <div class="flex justify-between text-sm font-extrabold" style="color: #4A1A26;">
                     <span>Total estimado:</span>
-                    <span class="text-xl font-black text-[#781428]">${{ getCartTotal() }}.00 MXN</span>
+                    <span class="text-xl font-black text-[#E3632C]">${{ getCartTotal() }}.00 MXN</span>
                 </div>
-                <button (click)="openCheckoutStep()" class="w-full py-3.5 rounded-2xl text-slate-900 font-black text-xs shadow-xl bg-amber-300 hover:bg-amber-400 transition">
+                <button (click)="openCheckoutStep()" class="w-full py-3.5 rounded-2xl text-white font-black text-xs shadow-xl bg-[#E3632C] hover:bg-[#4A1A26] transition">
                     Ir a pagar ➔
                 </button>
             </div>
@@ -632,88 +934,87 @@
 
     <!-- VENTANA CENTRADA DE FINALIZAR PEDIDO (SOLO TRAS INICIAR SESIÓN / REGISTRARSE) -->
     <div *ngIf="showCheckoutModal && !isGuest && loggedEmail" class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-        <div class="bg-[#FAF8F5] rounded-[2rem] max-w-4xl w-full p-6 sm:p-8 border-2 shadow-2xl overflow-y-auto max-h-[92vh] space-y-6" style="border-color: #781428;">
-            <div class="flex items-center justify-between border-b pb-3" style="border-color: #E4D4BA;">
-                <h3 class="font-brush text-4xl font-bold" style="color: #5C0B1B;">FINALIZAR PEDIDO</h3>
-                <button (click)="closeCheckoutModal()" class="text-xl font-bold text-gray-600 hover:text-red-700">✕</button>
+        <div class="bg-[#FBF6EC] rounded-[2rem] max-w-4xl w-full p-6 sm:p-8 border-2 shadow-2xl overflow-y-auto max-h-[92vh] space-y-6" style="border-color: #E3632C;">
+            <div class="flex items-center justify-between border-b pb-3" style="border-color: #F3ECDA;">
+                <h3 class="font-brush text-4xl font-bold" style="color: #4A1A26;">FINALIZAR PEDIDO</h3>
+                <button (click)="closeCheckoutModal()" class="text-xl font-bold text-gray-600 hover:text-[#D43F79]">✕</button>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                <div class="lg:col-span-7 space-y-5 text-xs font-bold" style="color: #5C0B1B;">
+                <div class="lg:col-span-7 space-y-5 text-xs font-bold" style="color: #4A1A26;">
                     <!-- ENTREGA -->
-                    <div class="bg-white rounded-3xl p-5 border space-y-4" style="border-color: #E4D4BA;">
+                    <div class="bg-[#FFFFFF] rounded-3xl p-5 border space-y-4" style="border-color: #F3ECDA;">
                         <h4 class="text-sm font-black">Entrega</h4>
                         <div class="grid grid-cols-3 gap-2">
-                            <button (click)="deliveryMode = 'momento'" [style.background-color]="deliveryMode === 'momento' ? '#781428' : '#FAF5EC'" [style.color]="deliveryMode === 'momento' ? '#FFF' : '#5C0B1B'" class="py-2.5 px-2 rounded-xl border border-[#E4D4BA] text-center font-black text-[11px]">Al Momento</button>
-                            <button (click)="deliveryMode = 'programa'" [style.background-color]="deliveryMode === 'programa' ? '#781428' : '#FAF5EC'" [style.color]="deliveryMode === 'programa' ? '#FFF' : '#5C0B1B'" class="py-2.5 px-2 rounded-xl border border-[#E4D4BA] text-center font-black text-[11px]">Programar</button>
-                            <button (click)="deliveryMode = 'uber'" [style.background-color]="deliveryMode === 'uber' ? '#781428' : '#FAF5EC'" [style.color]="deliveryMode === 'uber' ? '#FFF' : '#5C0B1B'" class="py-2.5 px-2 rounded-xl border border-[#E4D4BA] text-center font-black text-[11px]">Uber Eats</button>
+                            <button (click)="deliveryMode = 'momento'" [style.background-color]="deliveryMode === 'momento' ? '#E3632C' : '#FDECEB'" [style.color]="deliveryMode === 'momento' ? '#FFFFFF' : '#4A1A26'" class="py-2.5 px-2 rounded-xl border border-[#F3BCC4] text-center font-black text-[11px]">Al Momento</button>
+                            <button (click)="deliveryMode = 'programa'" [style.background-color]="deliveryMode === 'programa' ? '#E3632C' : '#FDECEB'" [style.color]="deliveryMode === 'programa' ? '#FFFFFF' : '#4A1A26'" class="py-2.5 px-2 rounded-xl border border-[#F3BCC4] text-center font-black text-[11px]">Programar</button>
+                            <button (click)="deliveryMode = 'uber'" [style.background-color]="deliveryMode === 'uber' ? '#E3632C' : '#FDECEB'" [style.color]="deliveryMode === 'uber' ? '#FFFFFF' : '#4A1A26'" class="py-2.5 px-2 rounded-xl border border-[#F3BCC4] text-center font-black text-[11px]">Uber Eats</button>
                         </div>
 
                         <div *ngIf="deliveryMode === 'programa'" class="space-y-1">
                             <label class="block text-[11px]">Selecciona Día y Hora:</label>
-                            <input type="datetime-local" [(ngModel)]="scheduledDate" class="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#E4D4BA] text-xs font-normal">
+                            <input type="datetime-local" [(ngModel)]="scheduledDate" class="w-full px-3 py-2 rounded-xl bg-[#FBF6EC] border border-[#F3ECDA] text-xs font-normal">
                         </div>
 
                         <div *ngIf="deliveryMode === 'uber'" class="space-y-1">
                             <label class="block text-[11px]">Selecciona Dirección de Entrega:</label>
-                            <select [(ngModel)]="selectedAddress" class="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#E4D4BA] text-xs font-normal">
+                            <select [(ngModel)]="selectedAddress" class="w-full px-3 py-2 rounded-xl bg-[#FBF6EC] border border-[#F3ECDA] text-xs font-normal">
                                 <option [value]="userProfile.address">Casa Principal (BD): {{ userProfile.address }}</option>
                                 <option *ngFor="let addr of userAddresses" [value]="addr.full">{{ addr.label }}: {{ addr.full }}</option>
                             </select>
                         </div>
 
                         <div class="space-y-1">
-                            <label class="block text-[11px] text-rose-900">¿Tienes alguna alergia o restricción?</label>
-                            <input type="text" [(ngModel)]="clientAllergies" placeholder="Ej. Alergia al ajonjolí..." class="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#E4D4BA] text-xs font-normal">
+                            <label class="block text-[11px] text-[#D43F79]">¿Tienes alguna alergia o restricción?</label>
+                            <input type="text" [(ngModel)]="clientAllergies" placeholder="Ej. Alergia al ajonjolí..." class="w-full px-3 py-2 rounded-xl bg-[#FBF6EC] border border-[#F3ECDA] text-xs font-normal">
                         </div>
 
-                        <div class="bg-amber-100/60 p-2.5 rounded-xl border border-amber-300 flex items-center gap-2.5">
-                            <input type="checkbox" [(ngModel)]="clientIsUrgent" id="checkoutUrgentCheck" class="w-4 h-4 accent-[#781428] rounded">
-                            <label for="checkoutUrgentCheck" class="cursor-pointer text-[11px] font-extrabold text-amber-900">Marcar pedido como URGENTE</label>
+                        <div class="bg-[#FCE1D2] p-2.5 rounded-xl border border-[#F3BCC4] flex items-center gap-2.5">
+                            <input type="checkbox" [(ngModel)]="clientIsUrgent" id="checkoutUrgentCheck" class="w-4 h-4 accent-[#E3632C] rounded">
+                            <label for="checkoutUrgentCheck" class="cursor-pointer text-[11px] font-extrabold text-[#4A1A26]">Marcar pedido como URGENTE</label>
                         </div>
                     </div>
 
                     <!-- MÉTODO DE PAGO -->
-                    <div class="bg-white rounded-3xl p-5 border space-y-3" style="border-color: #E4D4BA;">
+                    <div class="bg-[#FFFFFF] rounded-3xl p-5 border space-y-3" style="border-color: #F3ECDA;">
                         <h4 class="text-sm font-black">Método de pago</h4>
-                        <select [(ngModel)]="paymentMethod" (change)="onPaymentMethodChange()" class="w-full px-3 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#E4D4BA] text-xs font-normal">
+                        <select [(ngModel)]="paymentMethod" (change)="onPaymentMethodChange()" class="w-full px-3 py-2.5 rounded-xl bg-[#FBF6EC] border border-[#F3ECDA] text-xs font-normal">
                             <option value="Efectivo">Efectivo</option>
                             <option value="Transferencia">Transferencia</option>
                             <option value="Tarjeta">Tarjeta</option>
                         </select>
 
-                        <div *ngIf="paymentMethod === 'Transferencia'" class="bg-[#FAF8F5] p-3.5 rounded-2xl border border-[#E4D4BA] space-y-2 text-[11px] font-normal text-gray-700">
-                            <p class="font-bold text-[#5C0B1B]">Datos para Transferencia Bancaria:</p>
+                        <div *ngIf="paymentMethod === 'Transferencia'" class="bg-[#FBF6EC] p-3.5 rounded-2xl border border-[#F3ECDA] space-y-2 text-[11px] font-normal text-gray-700">
+                            <p class="font-bold text-[#4A1A26]">Datos para Transferencia Bancaria:</p>
                             <p><b>Número de Tarjeta / Cuenta:</b> 4152 3130 9821 4410</p>
                             <p><b>Enviar comprobante al número (WhatsApp):</b> 477-290-4418</p>
-                            <p class="text-rose-900 font-semibold">Muestra tu comprobante en ventanilla al recibir tu pedido.</p>
-            
+                            <p class="text-[#D43F79] font-semibold">Muestra tu comprobante en ventanilla al recibir tu pedido.</p>
                         </div>
 
-                        <div *ngIf="paymentMethod === 'Tarjeta'" class="bg-[#FAF8F5] p-3.5 rounded-2xl border border-[#E4D4BA] space-y-2.5 text-[11px] font-normal text-gray-700">
-                            <p class="font-bold text-[#5C0B1B]">Datos de tu Tarjeta:</p>
+                        <div *ngIf="paymentMethod === 'Tarjeta'" class="bg-[#FBF6EC] p-3.5 rounded-2xl border border-[#F3ECDA] space-y-2.5 text-[11px] font-normal text-gray-700">
+                            <p class="font-bold text-[#4A1A26]">Datos de tu Tarjeta:</p>
                             <div>
-                                <label class="block font-bold text-[#5C0B1B] mb-1">Titular de la tarjeta</label>
-                                <input type="text" [(ngModel)]="cardHolderName" placeholder="Nombre como aparece en la tarjeta" class="w-full px-3 py-2 rounded-xl bg-white border border-[#E4D4BA] text-xs">
+                                <label class="block font-bold text-[#4A1A26] mb-1">Titular de la tarjeta</label>
+                                <input type="text" [(ngModel)]="cardHolderName" placeholder="Nombre como aparece en la tarjeta" class="w-full px-3 py-2 rounded-xl bg-white border border-[#F3ECDA] text-xs">
                             </div>
                             <div>
-                                <label class="block font-bold text-[#5C0B1B] mb-1">Número de tarjeta (13 a 16 dígitos)</label>
-                                <input type="text" [(ngModel)]="cardNumber" maxlength="19" placeholder="1234 5678 1234 5678" class="w-full px-3 py-2 rounded-xl bg-white border border-[#E4D4BA] text-xs">
+                                <label class="block font-bold text-[#4A1A26] mb-1">Número de tarjeta (13 a 16 dígitos)</label>
+                                <input type="text" [(ngModel)]="cardNumber" maxlength="19" placeholder="1234 5678 1234 5678" class="w-full px-3 py-2 rounded-xl bg-white border border-[#F3ECDA] text-xs">
                             </div>
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label class="block font-bold text-[#5C0B1B] mb-1">Vigencia (MM/AA)</label>
-                                    <input type="text" [(ngModel)]="cardExpiry" maxlength="5" placeholder="08/28" class="w-full px-3 py-2 rounded-xl bg-white border border-[#E4D4BA] text-xs">
+                                    <label class="block font-bold text-[#4A1A26] mb-1">Vigencia (MM/AA)</label>
+                                    <input type="text" [(ngModel)]="cardExpiry" maxlength="5" placeholder="08/28" class="w-full px-3 py-2 rounded-xl bg-white border border-[#F3ECDA] text-xs">
                                 </div>
                                 <div>
-                                    <label class="block font-bold text-[#5C0B1B] mb-1">CVV (3 dígitos)</label>
-                                    <input type="password" [(ngModel)]="cardCvv" maxlength="3" placeholder="123" class="w-full px-3 py-2 rounded-xl bg-white border border-[#E4D4BA] text-xs">
+                                    <label class="block font-bold text-[#4A1A26] mb-1">CVV (3 dígitos)</label>
+                                    <input type="password" [(ngModel)]="cardCvv" maxlength="3" placeholder="123" class="w-full px-3 py-2 rounded-xl bg-white border border-[#F3ECDA] text-xs">
                                 </div>
                             </div>
-                            <div *ngIf="isProcessingCard" class="text-amber-800 font-bold text-xs pt-1">
+                            <div *ngIf="isProcessingCard" class="text-[#E3632C] font-bold text-xs pt-1">
                                 Cargando y validando pago con tarjeta...
                             </div>
-                            <div *ngIf="cardStatusMessage && !isProcessingCard" class="p-2 rounded-xl text-xs font-bold" [ngClass]="cardStatusType === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'">
+                            <div *ngIf="cardStatusMessage && !isProcessingCard" class="p-2 rounded-xl text-xs font-bold" [ngClass]="cardStatusType === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-[#FDECEB] text-[#D43F79]'">
                                 {{ cardStatusMessage }}
                             </div>
                         </div>
@@ -721,19 +1022,19 @@
                 </div>
 
                 <!-- RESUMEN -->
-                <div class="lg:col-span-5 bg-white rounded-3xl p-5 border space-y-4" style="border-color: #E4D4BA;">
-                    <h4 class="text-sm font-black" style="color: #5C0B1B;">RESUMEN</h4>
+                <div class="lg:col-span-5 bg-[#FFFFFF] rounded-3xl p-5 border space-y-4" style="border-color: #F3ECDA;">
+                    <h4 class="text-sm font-black" style="color: #4A1A26;">RESUMEN</h4>
 
-                    <div class="space-y-2 border-b pb-3 text-xs" style="border-color: #E4D4BA;">
+                    <div class="space-y-2 border-b pb-3 text-xs" style="border-color: #F3ECDA;">
                         <div *ngFor="let item of cart" class="flex justify-between gap-2">
                             <span class="text-gray-700 font-semibold">{{ item.qty }}× {{ item.name }}</span>
-                            <span class="font-black text-[#5C0B1B]">${{ item.unitPrice * item.qty }}.00</span>
+                            <span class="font-black text-[#4A1A26]">${{ item.unitPrice * item.qty }}.00</span>
                         </div>
                     </div>
 
                     <div *ngIf="appliedCoupon" class="flex items-center justify-between bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl text-[11px] font-bold text-emerald-900">
                         <span>{{ appliedCoupon.code }} · -{{ appliedCoupon.discountPercent }}%</span>
-                        <button (click)="quitarCupon()" class="text-red-700 font-black">Quitar</button>
+                        <button (click)="quitarCupon()" class="text-[#D43F79] font-black">Quitar</button>
                     </div>
 
                     <div class="space-y-1.5 text-xs font-bold text-gray-600">
@@ -745,13 +1046,13 @@
                             <span>Descuento</span>
                             <span>-${{ getDiscountAmount() }}.00</span>
                         </div>
-                        <div class="flex justify-between text-base font-black pt-2 border-t" style="color: #5C0B1B; border-color: #E4D4BA;">
+                        <div class="flex justify-between text-base font-black pt-2 border-t" style="color: #4A1A26; border-color: #F3ECDA;">
                             <span>Total</span>
-                            <span class="text-[#781428]">${{ getCartTotal() }}.00 MXN</span>
+                            <span class="text-[#E3632C]">${{ getCartTotal() }}.00 MXN</span>
                         </div>
                     </div>
 
-                    <button (click)="checkoutOrder()" [disabled]="isProcessingCard" class="w-full py-3.5 rounded-2xl text-slate-900 font-black text-xs shadow-xl bg-amber-300 hover:bg-amber-400 disabled:opacity-60 transition">
+                    <button (click)="checkoutOrder()" [disabled]="isProcessingCard" class="w-full py-3.5 rounded-2xl text-white font-black text-xs shadow-xl bg-[#E3632C] hover:bg-[#4A1A26] disabled:opacity-60 transition">
                         {{ isProcessingCard ? 'Procesando Pago...' : 'Pagar $' + getCartTotal() + '.00 →' }}
                     </button>
                 </div>
@@ -761,36 +1062,36 @@
 
     <!-- MODAL DE PERSONALIZACIÓN DE PRODUCTO (ESTRUCTURA DE 2 COLUMNAS) -->
     <div *ngIf="showCustomizeModal" class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-        <div class="bg-[#FAF8F5] rounded-[2rem] max-w-4xl w-full p-6 sm:p-8 border-2 shadow-2xl overflow-y-auto max-h-[92vh]" style="border-color: #781428;">
-            <div class="flex justify-between items-center border-b pb-3 mb-6" style="border-color: #E4D4BA;">
-                <span class="text-[11px] font-bold text-[#781428]">Menú · {{ selectedProduct?.name }}</span>
-                <button (click)="showCustomizeModal = false" class="text-xl font-bold text-gray-600 hover:text-red-700">✕</button>
+        <div class="bg-[#FBF6EC] rounded-[2rem] max-w-4xl w-full p-6 sm:p-8 border-2 shadow-2xl overflow-y-auto max-h-[92vh]" style="border-color: #E3632C;">
+            <div class="flex justify-between items-center border-b pb-3 mb-6" style="border-color: #F3ECDA;">
+                <span class="text-[11px] font-bold text-[#E3632C]">Menú · {{ selectedProduct?.name }}</span>
+                <button (click)="showCustomizeModal = false" class="text-xl font-bold text-gray-600 hover:text-[#D43F79]">✕</button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
                 <div class="md:col-span-6 space-y-4">
-                    <div class="h-60 rounded-3xl overflow-hidden border-2 bg-white shadow-sm" style="border-color: #E4D4BA;">
+                    <div class="h-60 rounded-3xl overflow-hidden border-2 bg-white shadow-sm" style="border-color: #F3ECDA;">
                         <img [src]="selectedProduct?.image" [alt]="selectedProduct?.name" class="w-full h-full object-cover">
                     </div>
                     <div class="space-y-1">
-                        <h3 class="font-brush text-4xl font-bold" style="color: #5C0B1B;">{{ selectedProduct?.name }}</h3>
+                        <h3 class="font-brush text-4xl font-bold" style="color: #4A1A26;">{{ selectedProduct?.name }}</h3>
                         <p class="text-xs text-gray-600 leading-relaxed">{{ selectedProduct?.description }}</p>
                     </div>
                 </div>
 
-                <div class="md:col-span-6 bg-white rounded-3xl p-5 border space-y-4 text-xs font-bold" style="border-color: #E4D4BA; color: #5C0B1B;">
-                    <div class="flex items-baseline gap-2 border-b pb-3" style="border-color: #E4D4BA;">
-                        <span class="text-2xl font-black text-[#781428]">${{ selectedProduct?.price }}.00</span>
+                <div class="md:col-span-6 bg-[#FFFFFF] rounded-3xl p-5 border space-y-4 text-xs font-bold" style="border-color: #F3ECDA; color: #4A1A26;">
+                    <div class="flex items-baseline gap-2 border-b pb-3" style="border-color: #F3ECDA;">
+                        <span class="text-2xl font-black text-[#E3632C]">${{ selectedProduct?.price }}.00</span>
                         <span class="text-[11px] text-gray-500 font-semibold">precio base</span>
                     </div>
 
                     <div>
                         <label class="block mb-1.5 text-[11px] uppercase">Ingredientes Base:</label>
-                        <div class="bg-[#FAF8F5] p-3 rounded-2xl border space-y-2 max-h-32 overflow-y-auto" style="border-color: #E4D4BA;">
+                        <div class="bg-[#FBF6EC] p-3 rounded-2xl border space-y-2 max-h-32 overflow-y-auto" style="border-color: #F3ECDA;">
                             <div *ngFor="let ing of modifiableIngredients" class="flex items-center justify-between text-[11px]">
                                 <label class="flex items-center gap-2 cursor-pointer font-normal text-gray-800">
-                                    <input type="checkbox" [(ngModel)]="ing.selected" class="w-4 h-4 accent-[#781428] rounded">
-                                    <span class="font-bold" style="color: #5C0B1B;">{{ ing.name }}</span>
+                                    <input type="checkbox" [(ngModel)]="ing.selected" class="w-4 h-4 accent-[#E3632C] rounded">
+                                    <span class="font-bold" style="color: #4A1A26;">{{ ing.name }}</span>
                                 </label>
                                 <span class="text-emerald-700 font-bold">Incluido</span>
                             </div>
@@ -799,30 +1100,30 @@
 
                     <div>
                         <label class="block mb-1.5 text-[11px] uppercase">Toppings y Extras:</label>
-                        <div class="bg-[#FAF8F5] p-3 rounded-2xl border space-y-2 max-h-32 overflow-y-auto" style="border-color: #E4D4BA;">
+                        <div class="bg-[#FBF6EC] p-3 rounded-2xl border space-y-2 max-h-32 overflow-y-auto" style="border-color: #F3ECDA;">
                             <div *ngFor="let top of extraToppings" class="flex items-center justify-between text-[11px]">
                                 <label class="flex items-center gap-2 cursor-pointer font-normal text-gray-800">
-                                    <input type="checkbox" [(ngModel)]="top.selected" class="w-4 h-4 accent-[#781428] rounded">
+                                    <input type="checkbox" [(ngModel)]="top.selected" class="w-4 h-4 accent-[#E3632C] rounded">
                                     <span>{{ top.name }}</span>
                                 </label>
-                                <span class="text-rose-900 font-extrabold">+${{ top.price }}.00</span>
+                                <span class="text-[#D43F79] font-extrabold">+${{ top.price }}.00</span>
                             </div>
                         </div>
                     </div>
 
                     <div>
                         <label class="block mb-1 text-[11px] uppercase">Nota Especial:</label>
-                        <input type="text" [(ngModel)]="customNotes" placeholder="Ej. Sin picante..." class="w-full px-3.5 py-2 rounded-xl bg-[#FAF8F5] border text-xs font-normal text-gray-800" style="border-color: #E4D4BA;">
+                        <input type="text" [(ngModel)]="customNotes" placeholder="Ej. Sin picante..." class="w-full px-3.5 py-2 rounded-xl bg-[#FBF6EC] border text-xs font-normal text-gray-800" style="border-color: #F3ECDA;">
                     </div>
 
-                    <div class="pt-3 border-t flex items-center justify-between gap-3" style="border-color: #E4D4BA;">
-                        <div class="flex items-center gap-3 bg-[#FAF5EC] px-3.5 py-2 rounded-xl border" style="border-color: #E4D4BA;">
+                    <div class="pt-3 border-t flex items-center justify-between gap-3" style="border-color: #F3ECDA;">
+                        <div class="flex items-center gap-3 bg-[#FDECEB] px-3.5 py-2 rounded-xl border" style="border-color: #F3BCC4;">
                             <button (click)="customQty = customQty > 1 ? customQty - 1 : 1" class="font-bold text-sm">-</button>
                             <span class="font-extrabold text-sm">{{ customQty }}</span>
                             <button (click)="customQty = customQty + 1" class="font-bold text-sm">+</button>
                         </div>
 
-                        <button (click)="confirmCustomizedAddToCart()" class="flex-1 py-3 px-4 rounded-2xl text-slate-900 font-black text-xs shadow-lg bg-amber-300 hover:bg-amber-400 transition">
+                        <button (click)="confirmCustomizedAddToCart()" class="flex-1 py-3 px-4 rounded-2xl text-white font-black text-xs shadow-lg bg-[#E3632C] hover:bg-[#4A1A26] transition">
                             Agregar ${{ getCustomizedItemTotal() }}.00 ➔
                         </button>
                     </div>
@@ -833,8 +1134,8 @@
 
     <!-- TOAST -->
     <div *ngIf="showToastFlag" class="fixed bottom-5 right-5 z-50">
-        <div class="px-4 py-3 rounded-2xl text-white text-xs font-extrabold shadow-2xl border-2 animate-bounce" style="background-color: #781428; border-color: #E4D4BA;">
+        <div class="px-4 py-3 rounded-2xl text-white text-xs font-extrabold shadow-2xl border-2 animate-bounce" style="background-color: #E3632C; border-color: #F3BCC4;">
             {{ toastMessage }}
         </div>
     </div>
-</div> 
+</div>

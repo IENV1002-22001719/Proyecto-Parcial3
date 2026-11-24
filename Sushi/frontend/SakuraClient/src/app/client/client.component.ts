@@ -27,6 +27,17 @@ export class ClientViewComponent implements OnInit, OnChanges {
   showBagDrawer: boolean = false;
   showCheckoutModal: boolean = false;
 
+  // Filtros del Menú a la Carta
+  menuSearchQuery: string = '';
+  selectedCategory: string = 'Todos';
+  quickChip: 'todos' | 'populares' | 'salmon' | 'tempura' = 'todos';
+  filterNoRaw: boolean = false;
+  filterVeggie: boolean = false;
+  filterSpicy: boolean = false;
+
+  // Carrusel de platillos destacados en Inicio
+  featuredIndex: number = 0;
+
   userProfile = {
     name: '',
     lastName: '',
@@ -123,6 +134,9 @@ export class ClientViewComponent implements OnInit, OnChanges {
         ...p,
         ingredients: this.extractIngredientsFromProduct(p)
       }));
+      if (this.featuredIndex >= this.products.length) {
+        this.featuredIndex = 0;
+      }
     }
     if (changes['orders']) {
       if (this.isAuthenticatedClient()) {
@@ -131,6 +145,125 @@ export class ClientViewComponent implements OnInit, OnChanges {
         this.loadClientCouponsFromDatabase();
       }
     }
+  }
+
+  // Métodos para filtrado del Menú a la Carta
+  getMenuCategories(): string[] {
+    const list = Array.isArray(this.products) ? this.products : [];
+    const cats = list
+      .map((p: any) => String(p?.category || '').trim())
+      .filter(Boolean);
+    return Array.from(new Set(cats));
+  }
+
+  getFilteredMenuProducts(): any[] {
+    const list = Array.isArray(this.products) ? this.products : [];
+    const q = (this.menuSearchQuery || '').trim().toLowerCase();
+
+    return list.filter((p: any, index: number) => {
+      const name = String(p?.name || '').toLowerCase();
+      const desc = String(p?.description || '').toLowerCase();
+      const cat = String(p?.category || '').toLowerCase();
+      const ings = Array.isArray(p?.ingredients)
+        ? p.ingredients.join(' ').toLowerCase()
+        : String(p?.ingredients || '').toLowerCase();
+      const combined = `${name} ${desc} ${cat} ${ings}`;
+
+      if (this.selectedCategory && this.selectedCategory !== 'Todos') {
+        if (String(p?.category || '').trim() !== this.selectedCategory) {
+          return false;
+        }
+      }
+
+      if (q && !combined.includes(q)) {
+        return false;
+      }
+
+      if (this.quickChip === 'populares') {
+        const isPop = index < 4 || Boolean(p?.popular || p?.destacado);
+        if (!isPop) return false;
+      } else if (this.quickChip === 'salmon') {
+        if (!combined.includes('salm')) return false;
+      } else if (this.quickChip === 'tempura') {
+        if (!combined.includes('tempura')) return false;
+      }
+
+      if (this.filterNoRaw) {
+        if (combined.includes('crudo') || combined.includes('sashimi') || combined.includes('ceviche')) {
+          return false;
+        }
+      }
+
+      if (this.filterVeggie) {
+        if (!combined.includes('vegetal') && !combined.includes('veggie') && !combined.includes('aguacate') && !combined.includes('pepino')) {
+          return false;
+        }
+      }
+
+      if (this.filterSpicy) {
+        if (!combined.includes('picante') && !combined.includes('chile') && !combined.includes('sriracha') && !combined.includes('habanero')) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }
+
+  resetMenuFilters(): void {
+    this.menuSearchQuery = '';
+    this.selectedCategory = 'Todos';
+    this.quickChip = 'todos';
+    this.filterNoRaw = false;
+    this.filterVeggie = false;
+    this.filterSpicy = false;
+  }
+
+  // Métodos para el carrusel de platillos destacados en Inicio
+  getFeaturedList(): any[] {
+    return Array.isArray(this.products) ? this.products : [];
+  }
+
+  getFeaturedProduct(): any {
+    const list = this.getFeaturedList();
+    if (!list.length) return {};
+    return list[this.featuredIndex % list.length] || {};
+  }
+
+  getPrevFeatured(): any {
+    const list = this.getFeaturedList();
+    if (!list.length) return {};
+    return list[(this.featuredIndex - 1 + list.length) % list.length];
+  }
+
+  getNextFeatured(): any {
+    const list = this.getFeaturedList();
+    if (!list.length) return {};
+    return list[(this.featuredIndex + 1) % list.length];
+  }
+
+  selectFeatured(index: number): void {
+    const list = this.getFeaturedList();
+    if (!list.length) return;
+    this.featuredIndex = ((index % list.length) + list.length) % list.length;
+  }
+
+  prevFeatured(): void {
+    this.selectFeatured(this.featuredIndex - 1);
+  }
+
+  nextFeatured(): void {
+    this.selectFeatured(this.featuredIndex + 1);
+  }
+
+  addFeaturedToCart(product: any): void {
+    if (!product || product.disponible === 0 || product.disponible === false) return;
+    this.selectedProduct = product;
+    this.customQty = 1;
+    this.customNotes = '';
+    this.modifiableIngredients = [];
+    this.extraToppings.forEach(t => (t.selected = false));
+    this.confirmCustomizedAddToCart();
   }
 
   private isAuthenticatedClient(): boolean {
@@ -324,6 +457,9 @@ export class ClientViewComponent implements OnInit, OnChanges {
                 ...p,
                 ingredients: this.extractIngredientsFromProduct(p)
               }));
+              if (this.featuredIndex >= this.products.length) {
+                this.featuredIndex = 0;
+              }
             } else if (Array.isArray(this.products) && this.products.length > 0) {
               this.products = this.products.map((p: any) => ({
                 ...p,
@@ -407,7 +543,6 @@ export class ClientViewComponent implements OnInit, OnChanges {
     }
   }
 
-  // Repite únicamente el producto y sus extras (ignorando ingredientes base y notas)
   repeatOrderToCart(order: any) {
     const itemsText = order?.itemsText || '';
     if (!itemsText) {

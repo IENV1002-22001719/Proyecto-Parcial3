@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request
 from config import get_db_connection
+import json
+from routes_cliente import _analizar_items_resumen, _descontar_stock_materia, _es_estado_final_pedido, _obtener_reserva_producto
 
 cocina_bp = Blueprint('cocina_bp', __name__)
 
@@ -15,6 +17,8 @@ def _normalizar_estado_pedido(estado_raw: str) -> str:
         return 'Listo para recoger'
     if 'prep' in lower:
         return 'En preparación'
+    if lower == 'completado':
+        return 'Completado'
     if 'entreg' in lower or 'complet' in lower:
         return 'Entregado'
     if 'pend' in lower:
@@ -41,6 +45,113 @@ def actualizar_estatus_orden():
 
         connection = get_db_connection()
         with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT id, estado, resumen_articulos, stock_descontado FROM pedidos WHERE folio = %s FOR UPDATE",
+                (folio,)
+            )
+            order = cursor.fetchone()
+            if not order:
+                return jsonify({"success": False, "error": "No se encontró el pedido."}), 404
+
+            estado_actual = order.get('estado') or ''
+            estado_final_actual = _es_estado_final_pedido(estado_actual)
+            estado_final_nuevo = _es_estado_final_pedido(status)
+            if estado_final_actual and not estado_final_nuevo:
+                return jsonify({"success": False, "error": "Un pedido entregado no se puede reabrir."}), 409
+
+            if estado_final_nuevo and not estado_final_actual and not int(order.get('stock_descontado') or 0):
+                cursor.execute(
+                    "SELECT producto_id, cantidad, ingredientes FROM pedido_detalles WHERE pedido_id = %s ORDER BY id FOR UPDATE",
+                    (order['id'],)
+                )
+                detalles = cursor.fetchall()
+                if not detalles:
+                    detalles = _analizar_items_resumen(cursor, order.get('resumen_articulos') or '')
+
+                cantidad_producto = {}
+                for detalle in detalles:
+                    producto_id = int(detalle.get('producto_id') or detalle.get('productId') or 0)
+                    cantidad = int(detalle.get('cantidad') or detalle.get('quantity') or 0)
+                    if producto_id > 0 and cantidad > 0:
+                        cantidad_producto[producto_id] = cantidad_producto.get(producto_id, 0) + cantidad
+
+                productos_actuales = {}
+                for producto_id, cantidad in cantidad_producto.items():
+                    cursor.execute(
+                        "SELECT id, nombre, stock_porciones FROM productos WHERE id = %s FOR UPDATE",
+                        (producto_id,)
+                    )
+                    producto = cursor.fetchone()
+                    if not producto:
+                        return jsonify({"success": False, "error": "Un platillo del pedido ya no existe en el inventario."}), 409
+                    reservadas_ajenas = _obtener_reserva_producto(cursor, producto_id, order['id'])
+                    stock_fisico = int(producto.get('stock_porciones') or 0)
+                    cursor.execute("SELECT COUNT(*) AS total FROM recetas WHERE producto_id = %s", (producto_id,))
+                    tiene_receta = int((cursor.fetchone() or {}).get('total') or 0) > 0
+                    if not tiene_receta and stock_fisico < cantidad + reservadas_ajenas:
+                        return jsonify({
+                            "success": False,
+                            "error": f"Stock insuficiente para finalizar {folio}: {producto['nombre']} necesita {cantidad} y hay {stock_fisico}."
+                        }), 409
+                    if stock_fisico <= 0 and not tiene_receta:
+                        return jsonify({
+                            "success": False,
+                            "error": f"Sin stock de {producto['nombre']} y no hay receta para validar sus insumos."
+                        }), 409
+                    producto['_tiene_receta'] = tiene_receta
+                    productos_actuales[producto_id] = producto
+
+                consumo_materiales = {}
+                for detalle in detalles:
+                    producto_id = int(detalle.get('producto_id') or detalle.get('productId') or 0)
+                    cantidad = int(detalle.get('cantidad') or detalle.get('quantity') or 0)
+                    if producto_id <= 0 or cantidad <= 0:
+                        continue
+                    ingredientes = detalle.get('ingredientes')
+                    if isinstance(ingredientes, str):
+                        try:
+                            ingredientes = json.loads(ingredientes)
+                        except (TypeError, ValueError):
+                            ingredientes = None
+
+                    cursor.execute("""
+                        SELECT r.materia_prima_id, r.gramos_requeridos, mp.nombre, mp.stock_gramos
+                        FROM recetas r
+                        JOIN materias_primas mp ON mp.id = r.materia_prima_id
+                        WHERE r.producto_id = %s
+                        FOR UPDATE
+                    """, (producto_id,))
+                    for receta in cursor.fetchall():
+                        nombre_mp = (receta.get('nombre') or '').strip().lower()
+                        if ingredientes is not None and not any(
+                            nombre_mp == str(nombre).strip().lower() for nombre in ingredientes
+                        ):
+                            continue
+                        material_id = int(receta['materia_prima_id'])
+                        consumo_materiales[material_id] = {
+                            'nombre': receta.get('nombre') or 'Insumo',
+                            'gramos': consumo_materiales.get(material_id, {}).get('gramos', 0)
+                                + float(receta.get('gramos_requeridos') or 0) * cantidad,
+                            'stock': float(receta.get('stock_gramos') or 0)
+                        }
+
+                for material in consumo_materiales.values():
+                    if material['stock'] < material['gramos']:
+                        return jsonify({
+                            "success": False,
+                            "error": f"Stock insuficiente de {material['nombre']} para finalizar el pedido."
+                        }), 409
+
+                for producto_id, cantidad in cantidad_producto.items():
+                    if not productos_actuales.get(producto_id, {}).get('_tiene_receta'):
+                        cursor.execute(
+                            "UPDATE productos SET stock_porciones = GREATEST(0, stock_porciones - %s) WHERE id = %s",
+                            (cantidad, producto_id)
+                        )
+                for material_id, material in consumo_materiales.items():
+                    _descontar_stock_materia(cursor, material_id, material['gramos'], folio)
+                cursor.execute("UPDATE pedidos SET stock_descontado = 1 WHERE id = %s", (order['id'],))
+
             if 'notes' in data and data.get('notes') is not None:
                 cursor.execute(
                     "UPDATE pedidos SET estado = %s, notas = %s WHERE folio = %s",
@@ -52,7 +163,7 @@ def actualizar_estatus_orden():
                     (status, folio)
                 )
             connection.commit()
-        return jsonify({"success": True, "status": status})
+        return jsonify({"success": True, "status": status, "stockDescontado": estado_final_nuevo and not estado_final_actual})
     except Exception as e:
         if connection:
             try:
@@ -173,13 +284,13 @@ def gestionar_cortes_caja():
                 tipo_corte = (d.get('tipo_corte') or d.get('turno') or 'Diario').strip()
                 fecha_corte = (d.get('fecha_corte') or '').strip()
                 fondo_inicial = float(d.get('fondo_inicial') or 0)
-                ventas_efectivo = float(d.get('ventas_efectivo') if d.get('ventas_efectivo') is not None else (d.get('total_efectivo') or 0))
+                ventas_efectivo = 0.0
                 ventas_tarjeta = float(d.get('ventas_tarjeta') if d.get('ventas_tarjeta') is not None else (d.get('total_tarjeta') or 0))
                 ventas_transferencia = float(d.get('ventas_transferencia') if d.get('ventas_transferencia') is not None else (d.get('total_transferencia') or 0))
                 ingreso_total = float(
                     d.get('ingreso_total')
                     if d.get('ingreso_total') is not None
-                    else (fondo_inicial + ventas_efectivo + ventas_tarjeta + ventas_transferencia)
+                    else (fondo_inicial + ventas_tarjeta + ventas_transferencia)
                 )
 
                 usuario_id = None

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Output, Input, OnInit, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -8,7 +8,7 @@ import { FormsModule } from '@angular/forms';
   imports: [CommonModule, FormsModule],
   templateUrl: './client.component.html',
 })
-export class ClientViewComponent implements OnInit, OnChanges {
+export class ClientViewComponent implements OnInit, OnChanges, OnDestroy {
 
   @Input() loggedEmail: string = '';
   @Input() isGuest: boolean = true;
@@ -26,6 +26,12 @@ export class ClientViewComponent implements OnInit, OnChanges {
   orderTab: string = 'proceso';
   showBagDrawer: boolean = false;
   showCheckoutModal: boolean = false;
+  showOrderNotifications: boolean = false;
+  orderStatusNotifications: any[] = [];
+  private knownOrderStatuses = new Map<string, string>();
+  private orderStatusSnapshotReady = false;
+  private orderPollingTimer: any = null;
+  private notificationAccount = '';
 
   // Filtros del Menú a la Carta
   menuSearchQuery: string = '';
@@ -54,7 +60,7 @@ export class ClientViewComponent implements OnInit, OnChanges {
   cart: any[] = [];
   deliveryMode: string = 'momento';
   scheduledDate: string = '';
-  paymentMethod: string = 'Efectivo';
+  paymentMethod: string = 'Transferencia';
 
   // Pago por Transferencia
   transferReceiptFileName: string = '';
@@ -66,6 +72,7 @@ export class ClientViewComponent implements OnInit, OnChanges {
   cardExpiry: string = '';
   cardCvv: string = '';
   isProcessingCard: boolean = false;
+  isSubmittingOrder: boolean = false;
   cardStatusMessage: string = '';
   cardStatusType: 'success' | 'error' | '' = '';
 
@@ -111,9 +118,26 @@ export class ClientViewComponent implements OnInit, OnChanges {
     this.loadOrdersFromDatabase();
     this.loadSecondaryAddressesFromDatabase();
     this.loadReservasFromDatabase();
+    this.notificationAccount = (this.loggedEmail || '').toLowerCase().trim();
+    this.startOrderStatusPolling();
+  }
+
+  ngOnDestroy() {
+    if (this.orderPollingTimer) clearInterval(this.orderPollingTimer);
   }
 
   ngOnChanges(changes: SimpleChanges) {
+    if (changes['loggedEmail'] || changes['isGuest']) {
+      const account = (this.loggedEmail || '').toLowerCase().trim();
+      if (account !== this.notificationAccount) {
+        this.notificationAccount = account;
+        this.knownOrderStatuses.clear();
+        this.orderStatusNotifications = [];
+        this.orderStatusSnapshotReady = false;
+        this.showOrderNotifications = false;
+      }
+      this.startOrderStatusPolling();
+    }
     if (changes['loggedEmail'] || changes['isGuest'] || changes['users']) {
       this.restorePendingCartIfLoggedIn();
       this.loadUserProfile();
@@ -257,13 +281,52 @@ export class ClientViewComponent implements OnInit, OnChanges {
   }
 
   addFeaturedToCart(product: any): void {
-    if (!product || product.disponible === 0 || product.disponible === false) return;
+    if (!product || this.isProductOutOfStock(product)) {
+      this.showToast('No hay stock suficiente de este platillo por el momento.');
+      return;
+    }
     this.selectedProduct = product;
     this.customQty = 1;
     this.customNotes = '';
-    this.modifiableIngredients = [];
+    this.modifiableIngredients = (product.ingredients || []).map((name: string) => ({ name, selected: true }));
     this.extraToppings.forEach(t => (t.selected = false));
     this.confirmCustomizedAddToCart();
+  }
+
+  getAvailableStock(product: any): number {
+    if (!product) return 0;
+    const stock = product.stockDisponible ?? product.stock;
+    return Math.max(0, Number.isFinite(Number(stock)) ? Math.floor(Number(stock)) : 0);
+  }
+
+  isProductOutOfStock(product: any): boolean {
+    return !product || product.disponible === 0 || product.disponible === false || this.getAvailableStock(product) <= 0;
+  }
+
+  getCartQuantityForProduct(product: any): number {
+    if (!product) return 0;
+    return (this.cart || []).filter(item =>
+      Number(item.productId) === Number(product.id) ||
+      (!item.productId && String(item.name).toLowerCase() === String(product.name).toLowerCase())
+    ).reduce((total, item) => total + (Number(item.qty) || 0), 0);
+  }
+
+  getRemainingStock(product: any): number {
+    return Math.max(0, this.getAvailableStock(product) - this.getCartQuantityForProduct(product));
+  }
+
+  canIncreaseCartItem(item: any): boolean {
+    const product = (this.products || []).find(p => Number(p.id) === Number(item.productId)) ||
+      (this.products || []).find(p => String(p.name).toLowerCase() === String(item.name).toLowerCase());
+    return Boolean(product && this.getCartQuantityForProduct(product) < this.getAvailableStock(product));
+  }
+
+  incrementCustomQty(): void {
+    if (!this.selectedProduct || this.customQty >= this.getRemainingStock(this.selectedProduct)) {
+      this.showToast('No hay stock suficiente, reduce la cantidad.');
+      return;
+    }
+    this.customQty += 1;
   }
 
   private isAuthenticatedClient(): boolean {
@@ -490,11 +553,57 @@ export class ClientViewComponent implements OnInit, OnChanges {
       .then(res => res.json())
       .then(data => {
         if (data && data.success && Array.isArray(data.orders)) {
+          this.trackOrderStatusChanges(data.orders);
           this.orders = data.orders;
           this.loadClientCouponsFromDatabase();
         }
       })
       .catch(err => console.error('Error cargando pedidos:', err));
+  }
+
+  private startOrderStatusPolling() {
+    if (this.orderPollingTimer) {
+      clearInterval(this.orderPollingTimer);
+      this.orderPollingTimer = null;
+    }
+    if (!this.isAuthenticatedClient()) return;
+    this.orderPollingTimer = setInterval(() => this.loadOrdersFromDatabase(), 8000);
+  }
+
+  private trackOrderStatusChanges(orders: any[]) {
+    for (const order of orders) {
+      const folio = String(order.folio || order.id || '');
+      const status = String(order.status || 'Pendiente');
+      if (!folio) continue;
+      const previous = this.knownOrderStatuses.get(folio);
+      if (this.orderStatusSnapshotReady && previous && previous !== status) {
+        this.orderStatusNotifications.unshift({
+          id: `${folio}:${status}:${Date.now()}`,
+          folio,
+          status,
+          message: `Tu pedido #${folio} cambió a: ${status}.`,
+          createdAt: order.createdAt || new Date().toISOString()
+        });
+        this.orderStatusNotifications = this.orderStatusNotifications.slice(0, 12);
+      }
+      this.knownOrderStatuses.set(folio, status);
+    }
+    this.orderStatusSnapshotReady = true;
+  }
+
+  getActiveOrderCount(): number {
+    return (this.orders || []).filter(order => !String(order.status || '').toLowerCase().includes('entregado'))
+      .filter(order => !String(order.status || '').toLowerCase().includes('cancelado')).length;
+  }
+
+  openOrderNotifications() {
+    this.showOrderNotifications = !this.showOrderNotifications;
+    if (this.showOrderNotifications && this.isAuthenticatedClient()) this.loadOrdersFromDatabase();
+  }
+
+  viewOrderFromNotification() {
+    this.showOrderNotifications = false;
+    this.setClientSection('pedidos');
   }
 
   loadReservasFromDatabase() {
@@ -537,9 +646,9 @@ export class ClientViewComponent implements OnInit, OnChanges {
   getOrdersByStatus(statusType: string) {
     if (!this.orders) return [];
     if (statusType === 'proceso') {
-      return this.orders.filter(o => !((o.status || '').toLowerCase().includes('entregado') || (o.status || '').toLowerCase().includes('completado')));
+      return this.orders.filter(o => !(o.status || '').toLowerCase().includes('entregado'));
     } else {
-      return this.orders.filter(o => (o.status || '').toLowerCase().includes('entregado') || (o.status || '').toLowerCase().includes('completado'));
+      return this.orders.filter(o => (o.status || '').toLowerCase().includes('entregado'));
     }
   }
 
@@ -574,7 +683,7 @@ export class ClientViewComponent implements OnInit, OnChanges {
 
     for (const part of parts) {
       const match = part.match(/^(\d+)x\s+([^(]+)(?:\((.+)\))?$/i);
-      const qty = match ? Math.max(1, parseInt(match[1], 10)) : 1;
+      let qty = match ? Math.max(1, parseInt(match[1], 10)) : 1;
       const rawName = (match ? match[2] : part).trim();
       const rawDetails = match && match[3] ? match[3].trim() : '';
 
@@ -589,6 +698,13 @@ export class ClientViewComponent implements OnInit, OnChanges {
       const foundProduct = (this.products || []).find(
         p => (p.name || '').toLowerCase().trim() === rawName.toLowerCase().trim()
       );
+      if (!foundProduct || this.isProductOutOfStock(foundProduct)) continue;
+      const availableQty = this.getRemainingStock(foundProduct);
+      if (qty > availableQty) {
+        qty = availableQty;
+        this.showToast(`Stock insuficiente de ${rawName}; ajustamos la cantidad disponible.`);
+      }
+      if (qty < 1) continue;
       const basePrice = foundProduct ? Number(foundProduct.price) || 0 : 0;
 
       let extrasPrice = 0;
@@ -600,10 +716,16 @@ export class ClientViewComponent implements OnInit, OnChanges {
         }
       }
 
+      const baseMatch = rawDetails.match(/Base:\s*\[([^\]]*)\]/i);
+      const ingredients = baseMatch
+        ? baseMatch[1].split(',').map((name: string) => name.trim()).filter(Boolean)
+        : (foundProduct.ingredients || []);
       this.cart.push({
+        productId: foundProduct.id,
         name: rawName,
         unitPrice: basePrice + extrasPrice,
         qty,
+        ingredients,
         customDetails: onlyExtras
       });
       addedCount++;
@@ -621,7 +743,7 @@ export class ClientViewComponent implements OnInit, OnChanges {
       return this.backendCompletedOrders;
     }
     if (!this.orders) return 0;
-    return this.orders.filter(o => (o.status || '').toLowerCase().includes('entregado') || (o.status || '').toLowerCase().includes('completado')).length;
+    return this.orders.filter(o => (o.status || '').toLowerCase().includes('entregado')).length;
   }
 
   private getRedeemedStorageKey(): string {
@@ -790,8 +912,15 @@ export class ClientViewComponent implements OnInit, OnChanges {
     return Math.round((subtotal * pct) / 100);
   }
 
+  getDeliveryFee(): number {
+    if (this.deliveryMode !== 'uber') return 0;
+    const totalAfterDiscount = this.getCartSubtotal() - this.getDiscountAmount();
+    const hasLoyaltyFreeShipping = this.getCompletedOrdersCount() >= 16;
+    return totalAfterDiscount >= 300 || hasLoyaltyFreeShipping ? 0 : 50;
+  }
+
   getCartTotal(): number {
-    const total = this.getCartSubtotal() - this.getDiscountAmount();
+    const total = this.getCartSubtotal() - this.getDiscountAmount() + this.getDeliveryFee();
     return total > 0 ? total : 0;
   }
 
@@ -834,7 +963,7 @@ export class ClientViewComponent implements OnInit, OnChanges {
     this.showToast(`Comprobante "${file.name}" adjuntado`);
   }
 
-  procesarPagoTarjeta(): Promise<boolean> {
+  async procesarPagoTarjeta(): Promise<boolean> {
     const digitsOnly = (this.cardNumber || '').replace(/\D/g, '');
     const cvvDigits = (this.cardCvv || '').replace(/\D/g, '');
     const expiryClean = (this.cardExpiry || '').trim();
@@ -843,24 +972,22 @@ export class ClientViewComponent implements OnInit, OnChanges {
     this.cardStatusMessage = 'Procesando pago con tarjeta...';
     this.cardStatusType = '';
 
-    return new Promise(resolve => {
-      setTimeout(() => {
-        this.isProcessingCard = false;
+    try {
+      // Esta pantalla no está conectada a una pasarela bancaria. Valida los
+      // datos de demostración localmente y nunca deja el checkout esperando un timer.
+      if (digitsOnly.length < 13 || digitsOnly.length > 16 || cvvDigits.length !== 3 || !expiryClean) {
+        this.cardStatusType = 'error';
+        this.cardStatusMessage = 'Revisa los datos de la tarjeta e inténtalo de nuevo.';
+        this.showToast(this.cardStatusMessage);
+        return false;
+      }
 
-        if (digitsOnly.length < 13 || digitsOnly.length > 16 || cvvDigits.length !== 3 || !expiryClean) {
-          this.cardStatusType = 'error';
-          this.cardStatusMessage = 'Pago rechazado, vuelva a intentarlo.';
-          this.showToast('Pago rechazado, vuelva a intentarlo.');
-          resolve(false);
-          return;
-        }
-
-        this.cardStatusType = 'success';
-        this.cardStatusMessage = 'Pago de tarjeta exitoso.';
-        this.showToast('Pago de tarjeta exitoso.');
-        resolve(true);
-      }, 900);
-    });
+      this.cardStatusType = 'success';
+      this.cardStatusMessage = 'Datos de tarjeta validados.';
+      return true;
+    } finally {
+      this.isProcessingCard = false;
+    }
   }
 
   addNewAddress() {
@@ -947,6 +1074,10 @@ export class ClientViewComponent implements OnInit, OnChanges {
   }
 
   openCustomizeModal(product: any) {
+    if (this.isProductOutOfStock(product) || this.getRemainingStock(product) < 1) {
+      this.showToast('No hay stock suficiente de este platillo por el momento.');
+      return;
+    }
     this.selectedProduct = product;
     this.customQty = 1;
     this.customNotes = '';
@@ -965,6 +1096,11 @@ export class ClientViewComponent implements OnInit, OnChanges {
 
   confirmCustomizedAddToCart() {
     if (!this.selectedProduct) return;
+    const remaining = this.getRemainingStock(this.selectedProduct);
+    if (this.customQty < 1 || this.customQty > remaining) {
+      this.showToast('No hay stock suficiente, reduce la cantidad.');
+      return;
+    }
     const activeIngs = this.modifiableIngredients.filter(i => i.selected).map(i => i.name).join(', ');
     const activeExtras = this.extraToppings.filter(t => t.selected).map(t => t.name).join(', ');
 
@@ -973,9 +1109,11 @@ export class ClientViewComponent implements OnInit, OnChanges {
     if (this.customNotes) details += ` | Nota: ${this.customNotes}`;
 
     this.cart.push({
+      productId: this.selectedProduct.id,
       name: this.selectedProduct.name,
       unitPrice: this.getCustomizedItemTotal() / this.customQty,
       qty: this.customQty,
+      ingredients: this.modifiableIngredients.filter(i => i.selected).map((i: any) => i.name),
       customDetails: details
     });
     this.showCustomizeModal = false;
@@ -983,6 +1121,10 @@ export class ClientViewComponent implements OnInit, OnChanges {
   }
 
   updateCartQty(item: any, delta: number) {
+    if (delta > 0 && !this.canIncreaseCartItem(item)) {
+      this.showToast('No hay stock suficiente, reduce la cantidad.');
+      return;
+    }
     item.qty += delta;
     if (item.qty <= 0) this.cart = this.cart.filter(i => i !== item);
     if (this.cart.length === 0) this.showCheckoutModal = false;
@@ -1019,7 +1161,7 @@ export class ClientViewComponent implements OnInit, OnChanges {
         : ` | Pendiente enviar comprobante y mostrar en ventanilla`;
     } else if (this.paymentMethod === 'Tarjeta') {
       const last4 = (this.cardNumber || '').replace(/\D/g, '').slice(-4);
-      finalNotes += ` | Tarjeta terminación ${last4 || '****'} (Aprobado)`;
+      finalNotes += ` | Tarjeta terminación ${last4 || '****'} (Validación local; sin pasarela bancaria)`;
     }
 
     const usedCouponCode = this.appliedCoupon && this.appliedCoupon.unlocked ? this.appliedCoupon.code : '';
@@ -1056,13 +1198,22 @@ export class ClientViewComponent implements OnInit, OnChanges {
       total: totalPedido,
       status: 'En preparación',
       notes: finalNotes,
-      usedCouponCode: usedCouponCode || null
+      usedCouponCode: usedCouponCode || null,
+      items: this.cart.map(item => ({
+        productId: item.productId || (this.products || []).find(p => String(p.name).toLowerCase() === String(item.name).toLowerCase())?.id,
+        quantity: Number(item.qty) || 1,
+        ingredients: Array.isArray(item.ingredients) ? item.ingredients : null
+      }))
     };
 
+    this.isSubmittingOrder = true;
+    const orderController = new AbortController();
+    const orderTimeout = setTimeout(() => orderController.abort(), 15000);
     fetch('http://localhost:5000/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newOrder)
+      body: JSON.stringify(newOrder),
+      signal: orderController.signal
     })
       .then(async res => {
         const data = await res.json();
@@ -1099,7 +1250,11 @@ export class ClientViewComponent implements OnInit, OnChanges {
       })
       .catch(err => {
         console.error('Error al confirmar compra:', err);
-        this.showToast('Error al crear pedido: ' + err.message);
+        this.showToast(err.name === 'AbortError' ? 'El servidor tardó demasiado. Intenta confirmar el pedido otra vez.' : (err.message || 'No se pudo confirmar el pedido.'));
+      })
+      .finally(() => {
+        clearTimeout(orderTimeout);
+        this.isSubmittingOrder = false;
       });
   }
 

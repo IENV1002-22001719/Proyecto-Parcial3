@@ -1,1 +1,6 @@
 node_modules/
+Sushi/backend/.env
+Sushi/backend/.venv/
+
+__pycache__/
+*.py[cod]

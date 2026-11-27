@@ -10,6 +10,12 @@ def _normalizar_unidad(unidad: str) -> str:
     u = (unidad or 'gramos').lower().strip()
     if u in ('kg', 'kilo', 'kilos', 'kilogramo', 'kilogramos'):
         return 'kg'
+    if u in ('litro', 'litros', 'l', 'lt'):
+        return 'litro'
+    if u in ('paquete', 'paquetes', 'paq'):
+        return 'paquete'
+    if u in ('costal', 'costales', 'saco', 'sacos'):
+        return 'costal'
     if u in ('pieza', 'piezas', 'pz', 'pza', 'unidad', 'unidades'):
         return 'pieza'
     return 'gramos'
@@ -41,11 +47,13 @@ def _resolver_valor_enum_unidad(cursor, unidad_norm: str) -> str:
         return 'g' if unidad_norm == 'gramos' else ('pz' if unidad_norm == 'pieza' else 'kg')
 
 
-def _convertir_a_gramos(cantidad: float, unidad: str) -> float:
+def _convertir_a_gramos(cantidad: float, unidad: str, peso_unitario_kg: float = None) -> float:
     u = _normalizar_unidad(unidad)
-    if u == 'kg':
+    if u in ('kg', 'litro'):
         return cantidad * 1000.0
-    if u == 'pieza':
+    if u in ('pieza', 'paquete', 'costal'):
+        if peso_unitario_kg and peso_unitario_kg > 0:
+            return cantidad * peso_unitario_kg * 1000.0
         return cantidad * 100.0
     return cantidad
 
@@ -204,6 +212,15 @@ def get_data():
         with connection.cursor() as cursor:
             cursor.execute("SELECT * FROM productos ORDER BY id DESC")
             db_products = cursor.fetchall()
+            cursor.execute("""
+                SELECT d.producto_id, COALESCE(SUM(d.cantidad), 0) AS reservado
+                FROM pedido_detalles d
+                JOIN pedidos p ON p.id = d.pedido_id
+                WHERE p.stock_descontado = 0
+                  AND LOWER(p.estado) NOT IN ('entregado', 'entregado al uber', 'cancelado')
+                GROUP BY d.producto_id
+            """)
+            reservas_producto = {int(row['producto_id']): int(row['reservado'] or 0) for row in cursor.fetchall()}
             products = []
             for r in db_products:
                 nombre = (r.get('nombre') or '').lower()
@@ -225,9 +242,11 @@ def get_data():
                     img_url = 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=600&q=80'
 
                 ingredients = ["Arroz japonés grano corto (Nishiki)"]
+                insumos_faltantes = []
+                porciones_por_receta = None
                 try:
                     cursor.execute("""
-                        SELECT mp.nombre
+                        SELECT mp.id, mp.nombre, mp.stock_gramos, mp.stock_minimo_gramos, rec.gramos_requeridos
                         FROM recetas rec
                         JOIN materias_primas mp ON rec.materia_prima_id = mp.id
                         WHERE rec.producto_id = %s
@@ -235,16 +254,42 @@ def get_data():
                     ing_rows = cursor.fetchall()
                     if ing_rows:
                         ingredients = [row['nombre'] for row in ing_rows]
+                        capacidades = []
+                        for row in ing_rows:
+                            requerido = float(row.get('gramos_requeridos') or 0)
+                            stock_insumo = float(row.get('stock_gramos') or 0)
+                            minimo_insumo = float(row.get('stock_minimo_gramos') or 0)
+                            capacidad = int(stock_insumo // requerido) if requerido > 0 else 0
+                            capacidades.append(capacidad)
+                            if stock_insumo < requerido:
+                                insumos_faltantes.append({
+                                    'id': row.get('id'), 'nombre': row.get('nombre'),
+                                    'stock': stock_insumo, 'requerido': requerido,
+                                    'mensaje': f"Sin existencia suficiente para una porción: {row.get('nombre')} ({stock_insumo:g} g disponibles, {requerido:g} g requeridos)."
+                                })
+                        porciones_por_receta = min(capacidades) if capacidades else None
                 except Exception:
                     pass
+
+                stock_fisico_producto = int(r.get('stock_porciones', 0) or 0)
+                if porciones_por_receta is not None:
+                    # Para platillos con receta, las materias primas determinan
+                    # cuántas porciones se pueden preparar actualmente.
+                    stock_fisico_producto = porciones_por_receta
+                stock_reservado = reservas_producto.get(int(r.get('id') or 0), 0)
+                stock_disponible = max(0, stock_fisico_producto - stock_reservado)
 
                 products.append({
                     "id": r.get('id'),
                     "name": r.get('nombre'),
                     "description": r.get('descripcion', ''),
                     "price": float(r.get('precio', 0)),
-                    "stock": int(r.get('stock_porciones', 10)),
-                    "disponible": int(r.get('disponible', 1)),
+                    "stock": stock_fisico_producto,
+                    "stockDisponible": stock_disponible,
+                    "stockReservado": stock_reservado,
+                    "stockPorReceta": stock_fisico_producto,
+                    "disponible": int(r.get('disponible', 1)) if stock_disponible > 0 else 0,
+                    "insumosFaltantes": insumos_faltantes,
                     "image": img_url,
                     "ingredients": ingredients
                 })
@@ -277,6 +322,7 @@ def get_data():
                 LEFT JOIN proveedores p ON mp.proveedor_id = p.id
                 ORDER BY mp.id ASC
             """)
+            raw_material_rows = cursor.fetchall()
             raw_materials = [{
                 "id": rm.get('id'),
                 "proveedor_id": rm.get('proveedor_id'),
@@ -286,10 +332,42 @@ def get_data():
                 "stock": float(rm.get('stock_gramos', 0)),
                 "stock_unidades": float(rm.get('stock_unidades', 0)),
                 "stock_minimo": float(rm.get('stock_minimo_gramos', 0)),
+                "faltante_produccion_gramos": 0,
+                "productos_afectados": [],
                 "peso_unitario_kg": float(rm.get('peso_unitario_kg', 1) or 1),
                 "unit": rm.get('tipo_unidad'),
                 "costo": float(rm.get('costo_por_unidad', 0))
-            } for rm in cursor.fetchall()]
+            } for rm in raw_material_rows]
+
+            # Calcula si los insumos alcanzan para producir las porciones objetivo
+            # registradas en los platillos. Esto detecta faltantes compartidos como Nori.
+            try:
+                cursor.execute("""
+                    SELECT mp.id AS materia_id, p.nombre AS producto,
+                           COALESCE(p.stock_porciones, 0) AS stock_porciones,
+                           rec.gramos_requeridos, mp.stock_gramos
+                    FROM recetas rec
+                    JOIN materias_primas mp ON mp.id = rec.materia_prima_id
+                    JOIN productos p ON p.id = rec.producto_id
+                    WHERE COALESCE(p.stock_porciones, 0) > 0
+                """)
+                material_by_id = {int(m['id']): m for m in raw_materials}
+                demand_by_material = {}
+                for row in cursor.fetchall():
+                    requerido = float(row.get('gramos_requeridos') or 0)
+                    demanda = requerido * int(row.get('stock_porciones') or 0)
+                    key = int(row['materia_id'])
+                    data = demand_by_material.setdefault(key, {'demanda': 0.0, 'productos': set()})
+                    data['demanda'] += demanda
+                    data['productos'].add(row['producto'])
+                for key, demand in demand_by_material.items():
+                    material = material_by_id.get(key)
+                    if material is not None:
+                        material['faltante_produccion_gramos'] = max(0, round(demand['demanda'] - material['stock'], 2))
+                        if material['faltante_produccion_gramos'] > 0:
+                            material['productos_afectados'] = sorted(demand['productos'])
+            except Exception as recipe_error:
+                print('No se pudo calcular afectación de recetas en inventario:', recipe_error)
 
             purchase_orders = []
             try:
@@ -314,7 +392,7 @@ def get_data():
                 print("Nota cargando ordenes_compra:", ex_oc)
 
             cursor.execute("""
-                SELECT u.id, u.nombre, u.apellido, u.correo, u.telefono, u.direccion, r.nombre AS rol_nombre
+                SELECT u.id, u.nombre, u.apellido, u.correo, u.telefono, u.direccion, u.turno, r.nombre AS rol_nombre
                 FROM usuarios u
                 JOIN roles r ON u.rol_id = r.id
                 WHERE u.rol_id IN (1, 2)
@@ -326,6 +404,7 @@ def get_data():
                 "correo": u.get('correo'),
                 "telefono": u.get('telefono'),
                 "direccion": u.get('direccion'),
+                "turno": u.get('turno') or 'Sin asignar',
                 "rol": u.get('rol_nombre')
             } for u in cursor.fetchall()]
 
@@ -767,14 +846,9 @@ def actualizar_estado_reabastecimiento():
                     (orden_id,)
                 )
                 for d in cursor.fetchall():
+                    mp_id = int(d['materia_prima_id'])
                     gramos = float(d['gramos_solicitados'])
-                    unidades_extra = round(gramos / 1000.0, 2)
-                    cursor.execute("""
-                        UPDATE materias_primas
-                        SET stock_gramos = stock_gramos + %s,
-                            stock_unidades = stock_unidades + %s
-                        WHERE id = %s
-                    """, (gramos, unidades_extra, int(d['materia_prima_id'])))
+                    _sumar_stock_materia(cursor, mp_id, gramos, 0, 'gramos')
 
                 cursor.execute(
                     "INSERT INTO notificaciones_stock (mensaje) VALUES (%s)",
@@ -924,8 +998,8 @@ def reg_user():
                 rol_label = 'admin' if rol_id == 1 else 'cocina'
                 cursor.execute(
                     """INSERT INTO usuarios
-                       (rol_id, nombre, apellido, telefono, correo, direccion, contrasena_hash, fecha_nacimiento, genero, rol)
-                       VALUES (%s, %s, %s, %s, %s, %s, '12345', '2000-01-01', 'Otro', %s)""",
+                       (rol_id, nombre, apellido, telefono, correo, direccion, contrasena_hash, fecha_nacimiento, genero, rol, turno)
+                       VALUES (%s, %s, %s, %s, %s, %s, '12345', '2000-01-01', 'Otro', %s, %s)""",
                     (
                         rol_id,
                         (d.get('nombre') or 'Personal').strip(),
@@ -933,7 +1007,8 @@ def reg_user():
                         str(d.get('telefono') or '4770000000').strip()[:10],
                         correo,
                         (d.get('direccion') or 'León, Gto.').strip(),
-                        rol_label
+                        rol_label,
+                        str(d.get('turno') or 'Sin asignar').strip()
                     )
                 )
             elif request.method == 'DELETE':

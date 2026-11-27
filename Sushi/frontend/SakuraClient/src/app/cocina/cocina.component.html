@@ -42,7 +42,7 @@
 
                 <div class="pt-3 border-t space-y-1 text-xs font-bold" style="border-color: #F3ECDA;">
                     <span *ngIf="!isSidebarCollapsed" class="px-3 pb-1 text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-                        Control y Abastecimiento
+                        Control
                     </span>
                     <button (click)="kitchenSection = 'historial'" [ngClass]="kitchenSection==='historial' ? 'bg-[#E3632C] text-white shadow-sm' : 'text-[#4A1A26] hover:bg-[#FBF6EC]'" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition text-left">
                         <span *ngIf="!isSidebarCollapsed" class="truncate">Historial de Turno</span>
@@ -52,12 +52,9 @@
                     </button>
                     <button (click)="kitchenSection = 'almacen'; cargarInventarioYProveedores()" [ngClass]="kitchenSection==='almacen' ? 'bg-[#E3632C] text-white shadow-sm' : 'text-[#4A1A26] hover:bg-[#FBF6EC]'" class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl transition text-left">
                         <span *ngIf="!isSidebarCollapsed" class="truncate">Inventario</span>
-                        <span *ngIf="!isSidebarCollapsed && stockDeductionAlerts.length > 0" class="px-2 py-0.5 rounded-full text-[10px] font-black" [ngClass]="kitchenSection==='almacen' ? 'bg-white text-[#E3632C]' : 'bg-[#FDECEB] text-[#D43F79]'">
-                            {{ stockDeductionAlerts.length }}
+                        <span *ngIf="!isSidebarCollapsed && getMaterialsNeedingAttention().length > 0" class="px-2 py-0.5 rounded-full text-[10px] font-black" [ngClass]="kitchenSection==='almacen' ? 'bg-white text-[#E3632C]' : 'bg-[#FDECEB] text-[#D43F79]'">
+                            {{ getMaterialsNeedingAttention().length }}
                         </span>
-                    </button>
-                    <button (click)="kitchenSection = 'proveedores'; cargarInventarioYProveedores()" [ngClass]="kitchenSection==='proveedores' ? 'bg-[#E3632C] text-white shadow-sm' : 'text-[#4A1A26] hover:bg-[#FBF6EC]'" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition text-left">
-                        <span *ngIf="!isSidebarCollapsed" class="truncate">Proveedores</span>
                     </button>
                     <button (click)="abrirSeccionCorteCaja()" [ngClass]="kitchenSection==='corte' ? 'bg-[#E3632C] text-white shadow-sm' : 'text-[#4A1A26] hover:bg-[#FBF6EC]'" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition text-left">
                         <span *ngIf="!isSidebarCollapsed" class="truncate">Corte de Caja</span>
@@ -149,16 +146,36 @@
             <div class="bg-[#FFFFFF] border-l-4 border-[#E3632C] px-6 py-5 space-y-3 rounded-r-2xl border" style="border-color: #F3ECDA;">
                 <h2 class="font-brush text-3xl font-bold text-[#4A1A26]">Control por Canal de Entrega</h2>
                 <div class="flex flex-wrap gap-2.5">
+                    <button (click)="activeSubTab = 'todos'" [ngClass]="activeSubTab==='todos' ? 'bg-[#4A1A26] text-white' : 'bg-[#FBF6EC] text-[#4A1A26] border'" [style.border-color]="'#F3ECDA'" class="px-4 py-2 rounded-xl text-xs font-black">Todos ({{ getOrdersForChannelOverview().length }})</button>
                     <button (click)="activeSubTab = 'momento'" [ngClass]="activeSubTab==='momento' ? 'bg-[#E3632C] text-white' : 'bg-[#FBF6EC] text-[#4A1A26] border'" [style.border-color]="'#F3ECDA'" class="px-4 py-2 rounded-xl text-xs font-black">
-                        Al Momento
+                        Al Momento ({{ getOrdersByType('momento').length }})
                     </button>
                     <button (click)="activeSubTab = 'programado'" [ngClass]="activeSubTab==='programado' ? 'bg-[#E3632C] text-white' : 'bg-[#FBF6EC] text-[#4A1A26] border'" [style.border-color]="'#F3ECDA'" class="px-4 py-2 rounded-xl text-xs font-black">
-                        Sobre Pedido Programado
+                        Pedido Programado ({{ getOrdersByType('programado').length }})
                     </button>
                     <button (click)="activeSubTab = 'uber'" [ngClass]="activeSubTab==='uber' ? 'bg-[#E3632C] text-white' : 'bg-[#FBF6EC] text-[#4A1A26] border'" [style.border-color]="'#F3ECDA'" class="px-4 py-2 rounded-xl text-xs font-black">
-                        Envío a Domicilio (Uber)
+                        Domicilio · Uber ({{ getOrdersByType('uber').length }})
                     </button>
                 </div>
+            </div>
+
+            <div *ngIf="activeSubTab === 'todos'" class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <article *ngFor="let o of getOrdersForChannelOverview()" class="bg-white border-2 rounded-2xl overflow-hidden shadow-sm" [ngClass]="getOrderUrgencyClass(o)">
+                    <div class="px-5 py-3 bg-[#4A1A26] text-white flex justify-between items-center gap-3">
+                        <div><p class="font-black text-lg">#{{ o.folio }}</p><span class="text-[10px] uppercase tracking-wider text-[#FCE1D2]">{{ getOrderChannelLabel(o) }}</span></div>
+                        <span class="px-3 py-1 rounded-full bg-[#E3632C] text-xs font-black">{{ getMinutesElapsed(o.createdAt) }} min</span>
+                    </div>
+                    <div class="p-5 space-y-3">
+                        <p class="text-xs text-slate-600">Cliente: <b class="text-[#4A1A26]">{{ o.client || 'Mostrador' }}</b> · Estado: <b class="text-[#E3632C]">{{ o.status || 'Pendiente' }}</b></p>
+                        <p class="text-sm font-bold text-[#4A1A26]">{{ o.itemsText }}</p>
+                        <p *ngIf="getSpecialNotesOnly(o)" class="text-xs text-[#D43F79]">{{ getSpecialNotesOnly(o) }}</p>
+                        <div class="flex justify-end gap-2">
+                            <button (click)="updateOrderStatus(o, 'En preparación')" class="px-4 py-2 rounded-xl bg-[#FCE1D2] text-[#4A1A26] text-xs font-black">Preparar</button>
+                            <button (click)="completeCommandSendToTicket(o)" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black">Completado · enviar a tickets</button>
+                        </div>
+                    </div>
+                </article>
+                <p *ngIf="getOrdersForChannelOverview().length === 0" class="xl:col-span-2 bg-white rounded-2xl p-10 text-center text-sm text-slate-500">No hay órdenes activas en los canales.</p>
             </div>
 
             <div *ngIf="activeSubTab === 'momento'" class="bg-[#FFFFFF] border-t-4 border-[#E3632C] border-x border-b px-6 py-5 space-y-3 rounded-2xl" style="border-color: #F3ECDA;">
@@ -299,10 +316,15 @@
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase" [ngClass]="{
                                     'bg-emerald-100 text-emerald-800': m.estado === 'Disponible',
                                     'bg-[#FDECEB] text-[#D43F79]': m.estado === 'Ocupada',
-                                    'bg-[#FCE1D2] text-[#4A1A26]': m.estado === 'Reservada'
-                                }">{{ m.estado }}</span>
+                                    'bg-amber-100 text-amber-900': m.estado === 'Reservada'
+                                }">{{ m.estado === 'Disponible' ? 'Libre' : m.estado }}</span>
                             </td>
-                            <td class="p-3 text-slate-600">{{ m.clienteActual || '—' }}</td>
+                            <td class="p-3 text-slate-600">
+                                <select [ngModel]="m.estado === 'Disponible' ? 'Libre' : m.estado" (ngModelChange)="actualizarEstadoMesa(m, $event)" class="px-2.5 py-1.5 rounded-lg border bg-white text-xs font-bold text-[#4A1A26]" style="border-color:#F3ECDA" aria-label="Estado de mesa">
+                                    <option value="Libre">Libre</option><option value="Ocupada">Ocupada</option><option value="Reservada">Reservada</option>
+                                </select>
+                                <span class="ml-2">{{ m.clienteActual || '—' }}</span>
+                            </td>
                             <td class="p-3 text-right space-x-2">
                                 <button (click)="sentarEnMesa(m)" class="px-3 py-1.5 rounded-lg bg-[#E3632C] hover:bg-[#4A1A26] text-white text-[11px] font-black">Sentar</button>
                                 <button (click)="liberarMesaYQuitarReserva(m)" class="px-3 py-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-950 text-[11px] font-black">Liberar</button>
@@ -400,16 +422,9 @@
 
                     <div class="space-y-3 pt-2 border-t text-xs font-bold" style="border-color: #F3ECDA;">
                         <label class="block text-[#4A1A26]">Método de Pago:</label>
-                        <div class="grid grid-cols-3 gap-2">
-                            <button (click)="posPaymentMethod = 'Efectivo'" [ngClass]="posPaymentMethod==='Efectivo' ? 'bg-[#E3632C] text-white' : 'bg-[#FBF6EC] text-[#4A1A26]'" class="py-2 rounded-xl">Efectivo</button>
+                        <div class="grid grid-cols-2 gap-2">
                             <button (click)="posPaymentMethod = 'Tarjeta'" [ngClass]="posPaymentMethod==='Tarjeta' ? 'bg-[#E3632C] text-white' : 'bg-[#FBF6EC] text-[#4A1A26]'" class="py-2 rounded-xl">Tarjeta</button>
                             <button (click)="posPaymentMethod = 'Transferencia'" [ngClass]="posPaymentMethod==='Transferencia' ? 'bg-[#E3632C] text-white' : 'bg-[#FBF6EC] text-[#4A1A26]'" class="py-2 rounded-xl">Transferencia</button>
-                        </div>
-
-                        <div *ngIf="posPaymentMethod === 'Efectivo'" class="space-y-2 pt-2">
-                            <label class="block text-[#4A1A26]">Monto Recibido en Efectivo:</label>
-                            <input type="number" [(ngModel)]="posCashReceived" placeholder="Ej. 500" class="w-full p-2.5 rounded-xl border bg-[#FBF6EC]" style="border-color: #F3ECDA;">
-                            <p class="text-xs text-emerald-800 font-extrabold">Cambio a Entregar: ${{ getCashChange() }}.00</p>
                         </div>
 
                         <div *ngIf="posPaymentMethod === 'Tarjeta'" class="space-y-2 pt-2">
@@ -458,7 +473,7 @@
                                 <td class="p-3 text-[#E3632C]">#{{ t.folio }}</td>
                                 <td class="p-3 text-[#4A1A26]">{{ t.client || 'Mostrador' }}</td>
                                 <td class="p-3 text-slate-600">{{ t.itemsText }}</td>
-                                <td class="p-3">{{ t.paymentMethod || 'Efectivo' }}</td>
+                                <td class="p-3">{{ t.paymentMethod || 'Transferencia' }}</td>
                                 <td class="p-3 text-emerald-700">${{ t.total || 0 }}.00</td>
                                 <td class="p-3 text-right">
                                     <button (click)="reprintTicket(t)" class="px-3.5 py-1.5 rounded-xl bg-[#4A1A26] hover:bg-[#E3632C] text-white text-[11px] font-black transition">
@@ -535,7 +550,7 @@
             <div class="bg-[#FFFFFF] border-l-4 border-[#E3632C] px-6 py-4 flex flex-wrap items-center justify-between gap-4 rounded-r-2xl border" style="border-color: #F3ECDA;">
                 <div>
                     <h2 class="font-brush text-3xl font-bold text-[#4A1A26]">Control de Inventario Crítico (86-List)</h2>
-                    <p class="text-xs text-slate-600 mt-0.5">Bloquea platillos directamente en la base de datos si se agotan en barra.</p>
+                    <p class="text-xs text-slate-600 mt-0.5">La disponibilidad considera existencias, recetas e insumos. Bloquea manualmente platillos agotados en barra.</p>
                 </div>
                 <input type="text" [(ngModel)]="inventorySearchQuery" placeholder="Buscar platillo..." class="w-full sm:w-64 px-4 py-2.5 rounded-xl border bg-[#FBF6EC] text-xs font-bold text-[#4A1A26]" style="border-color: #F3ECDA;">
             </div>
@@ -545,7 +560,7 @@
                     <thead>
                         <tr class="bg-[#FBF6EC] text-[#4A1A26] font-black uppercase border-b" style="border-color: #F3ECDA;">
                             <th class="p-3">Platillo</th>
-                            <th class="p-3">Disponibilidad</th>
+                            <th class="p-3">Disponibilidad / insumos</th>
                             <th class="p-3 text-right">Acción</th>
                         </tr>
                     </thead>
@@ -557,12 +572,14 @@
                             </td>
                             <td class="p-3">
                                 <span [ngClass]="p.isAvailable === false ? 'text-[#D43F79] font-extrabold' : 'text-emerald-700 font-bold'">
-                                    {{ p.isAvailable === false ? 'Agotado Temporalmente' : 'Disponible en Barra' }}
+                                    {{ p.isAvailable === false ? 'No disponible · ' + (p.stockDisponible ?? p.stock ?? 0) + ' porciones' : 'Disponible · ' + (p.stockDisponible ?? p.stock) + ' porciones' }}
+                                    <span *ngFor="let insumo of p.insumosFaltantes" class="block mt-1 text-[10px] text-[#D43F79]">{{ insumo.mensaje }}</span>
+                                    <span *ngIf="p.isAvailable === false && (p.stockReservado || 0) > 0 && !p.insumosFaltantes?.length" class="block mt-1 text-[10px] text-slate-500">{{ p.stockReservado }} porciones comprometidas en pedidos activos; no requieren reabastecimiento.</span>
                                 </span>
                             </td>
                             <td class="p-3 text-right">
-                                <button (click)="toggleProductAvailability(p)" [ngClass]="p.isAvailable === false ? 'bg-emerald-600 text-white' : 'bg-[#D43F79] text-white'" class="px-4 py-2 rounded-xl text-xs font-extrabold">
-                                    {{ p.isAvailable === false ? 'Reactivar Platillo' : 'Bloquear (Agotado)' }}
+                                <button (click)="toggleProductAvailability(p)" [disabled]="p.isAvailable === false && (p.stockDisponible ?? p.stock) <= 0" [ngClass]="p.isAvailable === false ? 'bg-emerald-600 text-white' : 'bg-[#D43F79] text-white'" class="px-4 py-2 rounded-xl text-xs font-extrabold disabled:opacity-40 disabled:cursor-not-allowed">
+                                    {{ p.isAvailable === false ? ((p.insumosFaltantes?.length ?? 0) > 0 ? 'Abastecer insumos' : ((p.stockDisponible ?? p.stock) <= 0 ? 'Sin stock disponible' : 'Reactivar Platillo')) : 'Bloquear (Agotado)' }}
                                 </button>
                             </td>
                         </tr>
@@ -579,9 +596,6 @@
                     <h2 class="font-brush text-3xl font-bold text-[#4A1A26]">Inventario de Insumos</h2>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <button (click)="kitchenSection = 'proveedores'; cargarInventarioYProveedores()" class="px-4 py-2 rounded-xl bg-[#E3632C] hover:bg-[#4A1A26] text-white font-bold text-xs transition">
-                        Ir a Proveedores →
-                    </button>
                     <button (click)="cargarInventarioYProveedores()" class="px-4 py-2 rounded-xl bg-[#FBF6EC] hover:bg-[#FCE1D2] text-[#4A1A26] font-bold text-xs border" style="border-color: #F3ECDA;">
                         Actualizar Inventario
                     </button>
@@ -590,43 +604,48 @@
 
             <!-- TABLA DE INVENTARIO EN TIEMPO REAL -->
             <div class="bg-[#FFFFFF] border rounded-2xl p-6 space-y-4" style="border-color: #F3ECDA;">
-                <h3 class="font-brush text-2xl font-bold text-[#4A1A26]">Inventario de Insumos (Tiempo Real)</h3>
+                <div>
+                    <h3 class="font-brush text-2xl font-bold text-[#4A1A26]">Existencias para producción</h3>
+                    <p class="text-xs text-slate-500 mt-1">El stock se descuenta al finalizar el pedido. Revisa el mínimo y los insumos que no alcanzan para producir las porciones registradas.</p>
+                </div>
+                <div *ngIf="getMaterialsNeedingAttention().length" class="rounded-xl border border-[#F3BCC4] bg-[#FDECEB]/60 p-4 space-y-2">
+                    <p class="text-xs font-black uppercase tracking-wide text-[#D43F79]">Hace falta abastecer</p>
+                    <p *ngFor="let m of getMaterialsNeedingAttention()" class="text-xs text-[#4A1A26]">
+                        <strong>{{ m.name }}:</strong>
+                        <span *ngIf="m.stock <= m.stock_minimo"> {{ m.stock }} g disponibles; mínimo {{ m.stock_minimo }} g.</span>
+                        <span *ngIf="m.faltante_produccion_gramos > 0"> Faltan {{ m.faltante_produccion_gramos }} g para las porciones registradas de {{ m.productos_afectados.join(', ') }}.</span>
+                    </p>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
                         <thead>
                             <tr class="bg-[#FBF6EC] font-extrabold uppercase text-[#4A1A26] border-b" style="border-color: #F3ECDA;">
                                 <th class="p-3">Insumo</th>
                                 <th class="p-3">Proveedor</th>
-                                <th class="p-3">Stock (g)</th>
-                                <th class="p-3">Nivel (%)</th>
+                                <th class="p-3">Stock / unidad de compra</th>
+                                <th class="p-3">Mínimo</th>
+                                <th class="p-3">Producción</th>
                                 <th class="p-3">Estado</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y font-bold" style="border-color: #F3ECDA;">
-                            <tr *ngFor="let m of rawMaterials" [ngClass]="m.stock <= m.stock_minimo ? 'bg-[#FDECEB]/70' : ''">
+                            <tr *ngFor="let m of rawMaterials" [ngClass]="(m.stock <= m.stock_minimo || m.faltante_produccion_gramos > 0) ? 'bg-[#FDECEB]/70' : ''">
                                 <td class="p-3 text-[#4A1A26]">{{ m.name }}</td>
                                 <td class="p-3 text-slate-600">{{ m.proveedor_nombre }}</td>
-                                <td class="p-3" [ngClass]="m.stock <= m.stock_minimo ? 'text-[#D43F79]' : 'text-emerald-800'">{{ m.stock }} g</td>
-                                <td class="p-3 min-w-[170px]">
-                                    <div class="flex items-center gap-2">
-                                        <div class="flex-1 h-2.5 rounded-full bg-[#FBF6EC] overflow-hidden border" style="border-color: #F3ECDA;">
-                                            <div class="h-full rounded-full transition-all"
-                                                 [style.width.%]="getStockPercentage(m)"
-                                                 [ngClass]="getStockPercentage(m) <= 35 ? 'bg-[#D43F79]' : (getStockPercentage(m) <= 65 ? 'bg-amber-400' : 'bg-[#E3632C]')">
-                                            </div>
-                                        </div>
-                                        <span class="text-[11px] font-black text-[#4A1A26] w-10 text-right">{{ getStockPercentage(m) }}%</span>
-                                    </div>
+                                <td class="p-3" [ngClass]="m.stock <= m.stock_minimo ? 'text-[#D43F79]' : 'text-emerald-800'">{{ m.stock }} g ({{ m.stock_unidades }} {{ m.unit }})</td>
+                                <td class="p-3">{{ m.stock_minimo }} g</td>
+                                <td class="p-3" [ngClass]="m.faltante_produccion_gramos > 0 ? 'text-[#D43F79]' : 'text-emerald-700'">
+                                    {{ m.faltante_produccion_gramos > 0 ? 'Faltan ' + m.faltante_produccion_gramos + ' g' : 'Alcanza' }}
                                 </td>
                                 <td class="p-3">
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold"
-                                          [ngClass]="m.stock <= m.stock_minimo ? 'bg-[#FDECEB] text-[#D43F79]' : 'bg-emerald-100 text-emerald-800'">
-                                        {{ m.stock <= m.stock_minimo ? 'Bajo Mínimo' : 'Suficiente' }}
+                                          [ngClass]="(m.stock <= m.stock_minimo || m.faltante_produccion_gramos > 0) ? 'bg-[#FDECEB] text-[#D43F79]' : 'bg-emerald-100 text-emerald-800'">
+                                        {{ m.stock <= m.stock_minimo ? 'Reponer mínimo' : (m.faltante_produccion_gramos > 0 ? 'Falta para producción' : 'Suficiente') }}
                                     </span>
                                 </td>
                             </tr>
                             <tr *ngIf="rawMaterials.length === 0">
-                                <td colspan="5" class="p-6 text-center text-slate-400">No hay insumos registrados en el inventario.</td>
+                                <td colspan="6" class="p-6 text-center text-slate-400">No hay insumos registrados en el inventario.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -636,7 +655,8 @@
             <!-- NOTIFICACIONES DE INVENTARIO DEBAJO DEL INVENTARIO -->
             <div class="bg-[#FFFFFF] border rounded-2xl p-6 space-y-3" style="border-color: #F3BCC4;">
                 <div class="flex items-center justify-between flex-wrap gap-2">
-                    <h3 class="text-xs font-black uppercase tracking-wider text-[#4A1A26]">Notificaciones de Inventario</h3>
+                    <h3 class="text-xs font-black uppercase tracking-wider text-[#4A1A26]">Movimientos recientes por pedidos finalizados</h3>
+                    <p class="text-[11px] text-slate-500">Este historial registra el consumo descontado cuando cocina finaliza un pedido; no es una lista de compras pendientes.</p>
                     <span class="px-3 py-1 rounded-full bg-[#FDECEB] text-[#D43F79] text-xs font-black">
                         {{ stockDeductionAlerts.length }} registros
                     </span>
@@ -644,12 +664,7 @@
 
                 <div *ngIf="stockDeductionAlerts.length > 0" class="max-h-60 overflow-y-auto space-y-2.5 pr-1">
                     <div *ngFor="let alert of stockDeductionAlerts" class="bg-[#FBF6EC] border-l-4 border-[#E3632C] px-4 py-3 space-y-0.5 rounded-r-xl border" style="border-color: #F3ECDA;">
-                        <p class="text-xs font-black text-[#4A1A26]">
-                            Alerta de Inventario · Pedido #{{ alert.folio }} — {{ alert.summary }}
-                        </p>
-                        <p class="text-[11px] font-bold text-[#E3632C]">
-                            Descontado: {{ alert.details.join(' · ') }}
-                        </p>
+                        <p class="text-xs font-black text-[#4A1A26]">{{ alert.summary }}</p>
                     </div>
                 </div>
 
@@ -659,122 +674,13 @@
             </div>
         </div>
 
-        <!-- 7B. PROVEEDORES (SEPARADO) -->
-        <div *ngIf="kitchenSection === 'proveedores'" class="space-y-5">
-            <div class="bg-[#FFFFFF] border-l-4 border-[#E3632C] px-6 py-4 flex flex-wrap justify-between items-center gap-4 rounded-r-2xl border" style="border-color: #F3ECDA;">
-                <div>
-                    <span class="text-[10px] font-black uppercase text-[#E3632C]">Abastecimiento</span>
-                    <h2 class="font-brush text-3xl font-bold text-[#4A1A26]">Proveedores y Pedidos</h2>
-                </div>
-                <button (click)="kitchenSection = 'almacen'; cargarInventarioYProveedores()" class="px-4 py-2 rounded-xl bg-[#FBF6EC] hover:bg-[#FCE1D2] text-[#4A1A26] font-bold text-xs border" style="border-color: #F3ECDA;">
-                    Ver Inventario →
-                </button>
-            </div>
-
-            <div class="bg-[#FFFFFF] border-l-4 border-[#E3632C] border-y border-r rounded-2xl p-6 space-y-5" style="border-color: #F3ECDA;">
-                <h3 class="font-brush text-2xl font-bold text-[#4A1A26]">Solicitar Pedido a Proveedor</h3>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold">
-                    <div>
-                        <label class="block mb-1 text-[#4A1A26]">Proveedor / Distribuidora:</label>
-                        <select [(ngModel)]="pedidoProveedorForm.proveedor_id" (change)="onCambioProveedorCocina()" class="w-full p-2.5 rounded-xl border bg-[#FBF6EC]" style="border-color: #F3ECDA;">
-                            <option *ngFor="let p of providers" [ngValue]="p.id">{{ p.nombre_empresa }}</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block mb-1 text-[#4A1A26]">Estado Inicial:</label>
-                        <select [(ngModel)]="pedidoProveedorForm.estado" class="w-full p-2.5 rounded-xl border bg-[#FBF6EC]" style="border-color: #F3ECDA;">
-                            <option value="No entregado">No entregado</option>
-                            <option value="Entregado">Entregado</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="divide-y bg-[#FBF6EC] border rounded-xl max-h-72 overflow-y-auto px-4" style="border-color: #F3ECDA;">
-                    <div *ngFor="let m of getInsumosPorProveedorCocina()" class="py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
-                        <label class="flex items-center gap-2 font-bold cursor-pointer">
-                            <input type="checkbox" [(ngModel)]="pedidoProveedorForm.seleccionados[m.id]" class="w-4 h-4 accent-[#E3632C]">
-                            <span class="text-[#4A1A26]">{{ m.name }} <span class="text-[10px] text-slate-500">({{ getStockPercentage(m) }}%)</span></span>
-                        </label>
-                        <div class="flex items-center gap-2.5">
-                            <span class="text-base leading-none" title="Nivel de pedido">
-                                {{ getSliderRepresentativeIcon(pedidoProveedorForm.cantidades[m.id], pedidoProveedorForm.unidades[m.id] || 'kg') }}
-                            </span>
-                            <input type="range"
-                                   [(ngModel)]="pedidoProveedorForm.cantidades[m.id]"
-                                   min="0.5"
-                                   [max]="getMaxSliderForUnit(pedidoProveedorForm.unidades[m.id] || 'kg')"
-                                   step="0.5"
-                                   class="w-28 accent-[#E3632C] cursor-pointer">
-                            <input type="number" [(ngModel)]="pedidoProveedorForm.cantidades[m.id]" min="0.5" step="0.5" class="w-20 p-1.5 border rounded-lg font-bold text-right bg-[#FFFFFF]" style="border-color: #F3ECDA;">
-                            <select [(ngModel)]="pedidoProveedorForm.unidades[m.id]" class="p-1.5 border rounded-lg font-bold bg-[#FFFFFF]" style="border-color: #F3ECDA;">
-                                <option value="kg">Kg</option>
-                                <option value="gramos">Gramos</option>
-                                <option value="pieza">Pieza</option>
-                            </select>
-                        </div>
-                    </div>
-                    <p *ngIf="getInsumosPorProveedorCocina().length === 0" class="text-center py-6 text-slate-400 font-bold text-xs">
-                        Esta distribuidora no tiene insumos asignados en el inventario.
-                    </p>
-                </div>
-
-                <button (click)="enviarPedidoProveedorCocina()" class="px-6 py-3 rounded-xl bg-[#E3632C] hover:bg-[#4A1A26] text-white font-black text-xs transition">
-                    Enviar Pedido a Proveedor
-                </button>
-
-                <div class="pt-4 border-t space-y-3" style="border-color: #F3ECDA;">
-                    <h4 class="font-brush text-2xl font-bold text-[#4A1A26]">Pedidos Solicitados a Proveedor</h4>
-
-                    <div class="overflow-x-auto bg-[#FBF6EC] border rounded-xl" style="border-color: #F3ECDA;" *ngIf="requestedSupplierOrders.length > 0">
-                        <table class="w-full text-left text-xs">
-                            <thead>
-                                <tr class="bg-[#FDECEB] text-[#4A1A26] font-black uppercase border-b" style="border-color: #F3ECDA;">
-                                    <th class="p-3">Folio</th>
-                                    <th class="p-3">Proveedor</th>
-                                    <th class="p-3">Insumos</th>
-                                    <th class="p-3">Estado</th>
-                                    <th class="p-3 text-right">Actualizar</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y font-bold" style="border-color: #F3ECDA;">
-                                <tr *ngFor="let req of requestedSupplierOrders">
-                                    <td class="p-3 text-[#E3632C]">{{ req.id }}</td>
-                                    <td class="p-3">{{ req.providerName }} <span class="text-[10px] text-slate-400 block">{{ req.createdAtLabel }}</span></td>
-                                    <td class="p-3 text-slate-700">{{ req.itemsSummary }}</td>
-                                    <td class="p-3">
-                                        <span class="px-2.5 py-1 rounded-full text-[11px] font-black"
-                                              [ngClass]="req.status === 'Entregado' ? 'bg-emerald-100 text-emerald-800' : 'bg-[#FCE1D2] text-[#4A1A26]'">
-                                            {{ req.status }}
-                                        </span>
-                                    </td>
-                                    <td class="p-3 text-right space-x-1.5">
-                                        <button (click)="actualizarEstadoPedidoProveedor(req, 'Entregado')" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black">
-                                            Entregado
-                                        </button>
-                                        <button (click)="actualizarEstadoPedidoProveedor(req, 'No entregado')" class="px-3 py-1 rounded-lg bg-[#FCE1D2] hover:bg-[#F3BCC4] text-[#4A1A26] text-[11px] font-black">
-                                            No entregado
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <p *ngIf="requestedSupplierOrders.length === 0" class="text-center py-5 bg-[#FBF6EC] border rounded-xl text-xs font-bold text-slate-500" style="border-color: #F3ECDA;">
-                        No has solicitado todavía pedidos
-                    </p>
-                </div>
-            </div>
-        </div>
-
         <!-- 8. CORTE DE CAJA DEL DÍA -->
         <div *ngIf="kitchenSection === 'corte'" class="space-y-5">
             <div class="bg-[#FFFFFF] border-l-4 border-[#E3632C] px-6 py-4 flex flex-wrap justify-between items-center gap-4 rounded-r-2xl border" style="border-color: #F3ECDA;">
                 <div>
                     <span class="text-[10px] font-black uppercase text-[#E3632C]">Cierre del Día</span>
                     <h2 class="font-brush text-3xl font-bold text-[#4A1A26]">Corte de Caja</h2>
-                    <p class="text-xs text-slate-600 mt-0.5">Ingreso Total = Saldo Inicial + Efectivo + Tarjeta + Transferencia. Al enviar el corte se reinician las ventas pendientes del día y queda tu saldo inicial.</p>
+                    <p class="text-xs text-slate-600 mt-0.5">Ingreso Total = Saldo Inicial + Tarjeta + Transferencia. El efectivo se cuenta solo para cuadrar el fondo inicial de caja.</p>
                 </div>
                 <button (click)="cargarCortesDeCaja()" class="px-4 py-2 rounded-xl bg-[#FBF6EC] hover:bg-[#FCE1D2] text-[#4A1A26] font-bold text-xs border" style="border-color: #F3ECDA;">
                     Actualizar Cortes
@@ -785,12 +691,12 @@
                 <div class="bg-[#FFFFFF] border rounded-2xl p-4" style="border-color: #F3ECDA;">
                     <span class="text-[10px] font-black uppercase text-slate-400">Ingreso Total del Día</span>
                     <p class="text-2xl font-black text-[#E3632C] mt-1">${{ getCorteResumen().ingresoTotal.toFixed(2) }}</p>
-                    <span class="text-[11px] text-slate-500 font-bold">Inicial + Efec + Tarj + Transf</span>
+                    <span class="text-[11px] text-slate-500 font-bold">Inicial + Tarjeta + Transferencia</span>
                 </div>
                 <div class="bg-[#FFFFFF] border rounded-2xl p-4" style="border-color: #F3ECDA;">
-                    <span class="text-[10px] font-black uppercase text-slate-400">Efectivo en Caja</span>
+                    <span class="text-[10px] font-black uppercase text-slate-400">Fondo físico esperado</span>
                     <p class="text-2xl font-black text-emerald-700 mt-1">${{ getCorteResumen().efectivoEnCaja.toFixed(2) }}</p>
-                    <span class="text-[11px] text-slate-500 font-bold">Inicial (${{ toNum(corteForm.fondo_inicial).toFixed(2) }}) + Efec (${{ getCorteResumen().ventasEfectivo.toFixed(2) }})</span>
+                    <span class="text-[11px] text-slate-500 font-bold">Saldo inicial (${{ toNum(corteForm.fondo_inicial).toFixed(2) }})</span>
                 </div>
                 <div class="bg-[#FFFFFF] border rounded-2xl p-4" style="border-color: #F3ECDA;">
                     <span class="text-[10px] font-black uppercase text-slate-400">Tarjeta</span>
@@ -825,7 +731,7 @@
 
                     <div class="p-3.5 rounded-xl bg-[#FBF6EC] border text-xs space-y-1" style="border-color: #F3ECDA;">
                         <div class="flex justify-between font-bold">
-                            <span>Efectivo Esperado en Caja (Inicial + Efectivo):</span>
+                            <span>Fondo físico esperado (saldo inicial):</span>
                             <span>${{ getCorteResumen().efectivoEnCaja.toFixed(2) }}</span>
                         </div>
                         <div class="flex justify-between font-black" [ngClass]="getCorteDiferencia() < 0 ? 'text-[#D43F79]' : 'text-emerald-700'">
@@ -852,7 +758,6 @@
                                 <tr class="bg-[#FBF6EC] text-[#4A1A26] font-black uppercase border-b" style="border-color: #F3ECDA;">
                                     <th class="p-3">ID</th>
                                     <th class="p-3">Fecha</th>
-                                    <th class="p-3">Efectivo</th>
                                     <th class="p-3">Tarjeta / Transf.</th>
                                     <th class="p-3">Ingreso Total</th>
                                 </tr>
@@ -861,7 +766,6 @@
                                 <tr *ngFor="let c of cortesCajaList">
                                     <td class="p-3 text-[#E3632C]">#{{ c.id }}</td>
                                     <td class="p-3">{{ c.fecha_corte || '' }}</td>
-                                    <td class="p-3 text-emerald-700">${{ toNum(c.ventas_efectivo).toFixed(2) }}</td>
                                     <td class="p-3 text-slate-700">${{ toNum(c.ventas_tarjeta).toFixed(2) }} / ${{ toNum(c.ventas_transferencia).toFixed(2) }}</td>
                                     <td class="p-3 text-[#4A1A26]">${{ toNum(c.ingreso_total).toFixed(2) }}</td>
                                 </tr>

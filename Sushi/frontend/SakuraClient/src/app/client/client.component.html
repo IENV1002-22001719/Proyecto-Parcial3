@@ -21,6 +21,24 @@
 
                 <ng-container *ngIf="!isGuest && loggedEmail">
                     <button (click)="setClientSection('pedidos')" [style.background-color]="clientSection==='pedidos' ? '#E3632C' : 'transparent'" [style.color]="clientSection==='pedidos' ? '#FFFFFF' : '#4A1A26'" class="px-3.5 py-2 rounded-xl shadow-sm transition hover:bg-[#E3632C] hover:text-white border border-[#F3ECDA]">Mis Pedidos</button>
+                    <div class="relative">
+                        <button (click)="openOrderNotifications()" aria-label="Notificaciones de pedidos" [attr.aria-expanded]="showOrderNotifications" class="relative p-2 rounded-xl bg-[#FDECEB] text-[#4A1A26] border border-[#F3BCC4] hover:bg-[#FCE1D2]" title="Estado de tus pedidos">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17H9.143m8.571-2V11a5.714 5.714 0 00-11.428 0v4L4.571 17h14.858l-1.715-2zM10 20h4" /></svg>
+                            <span *ngIf="orderStatusNotifications.length || getActiveOrderCount()" class="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-[#E3632C] text-white text-[10px] font-black flex items-center justify-center">{{ orderStatusNotifications.length || getActiveOrderCount() }}</span>
+                        </button>
+                        <div *ngIf="showOrderNotifications" class="absolute right-0 top-11 z-[60] w-80 max-w-[90vw] bg-white rounded-2xl border border-[#F3ECDA] shadow-2xl p-4 space-y-3 text-left">
+                            <div class="flex items-center justify-between"><h3 class="font-black text-[#4A1A26]">Estado de tus pedidos</h3><button (click)="showOrderNotifications = false" class="text-gray-500">✕</button></div>
+                            <div *ngIf="orderStatusNotifications.length" class="max-h-36 overflow-y-auto space-y-2">
+                                <div *ngFor="let notice of orderStatusNotifications" class="rounded-xl bg-[#FDECEB] p-2.5 text-[11px] text-[#4A1A26]"><b>{{ notice.message }}</b></div>
+                            </div>
+                            <div *ngIf="getActiveOrderCount()" class="max-h-48 overflow-y-auto space-y-2">
+                                <div *ngFor="let order of getOrdersByStatus('proceso')" class="rounded-xl bg-[#FBF6EC] p-2.5 text-[11px] text-[#4A1A26]"><b>Pedido #{{ order.folio }}</b><span class="block text-gray-600">{{ order.status }} · {{ order.itemsText }}</span></div>
+                            </div>
+                            <p *ngIf="!getActiveOrderCount() && !orderStatusNotifications.length" class="text-[11px] text-gray-500">No tienes pedidos activos.</p>
+                            <button *ngIf="!isGuest && loggedEmail" (click)="viewOrderFromNotification()" class="w-full px-3 py-2 rounded-xl bg-[#E3632C] text-white text-xs font-black">Ver Mis Pedidos</button>
+                            <p *ngIf="isGuest" class="text-[10px] text-gray-500">Inicia sesión para recibir cambios del estado de tus pedidos.</p>
+                        </div>
+                    </div>
                     <button (click)="setClientSection('reservas')" [style.background-color]="clientSection==='reservas' ? '#E3632C' : 'transparent'" [style.color]="clientSection==='reservas' ? '#FFFFFF' : '#4A1A26'" class="px-3.5 py-2 rounded-xl shadow-sm transition hover:bg-[#E3632C] hover:text-white border border-[#F3ECDA]">Reservar Mesa</button>
                     <button (click)="setClientSection('rewards')" [style.background-color]="clientSection==='rewards' ? '#E3632C' : 'transparent'" [style.color]="clientSection==='rewards' ? '#FFFFFF' : '#4A1A26'" class="px-3.5 py-2 rounded-xl shadow-sm transition hover:bg-[#E3632C] hover:text-white border border-[#F3ECDA]">Club Hanami</button>
                 </ng-container>
@@ -148,7 +166,7 @@
                     <div class="flex items-start justify-start sm:justify-center gap-5 overflow-x-auto pb-2">
                         <button *ngFor="let item of getFeaturedList(); let idx = index"
                                 (click)="selectFeatured(idx)"
-                                (dblclick)="item.disponible !== 0 && item.disponible !== false && openCustomizeModal(item)"
+                                (dblclick)="!isProductOutOfStock(item) && openCustomizeModal(item)"
                                 class="group flex flex-col items-center gap-2 shrink-0 w-24 text-center focus:outline-none">
                             <div class="w-20 h-20 rounded-full overflow-hidden border-2 shadow-md transition-all duration-300 bg-white"
                                  [ngClass]="featuredIndex === idx ? 'border-[#E3632C] scale-105 ring-4 ring-[#F3BCC4]/60' : 'border-white group-hover:scale-105 group-hover:border-[#E3632C]'">
@@ -195,17 +213,18 @@
                             <div class="flex flex-wrap items-center gap-3 pt-1">
                                 <span class="text-2xl font-black text-[#E3632C]">${{ getFeaturedProduct().price }}.00</span>
                                 <span class="px-3 py-1 rounded-full bg-[#FBF6EC] border text-[10px] font-bold text-[#4A1A26]" style="border-color: #F3ECDA;">
-                                    ● {{ getFeaturedProduct().disponible === 0 || getFeaturedProduct().disponible === false ? 'Agotado hoy' : 'Disponible al momento' }}
+                                    ● {{ isProductOutOfStock(getFeaturedProduct()) ? 'No disponible por el momento' : 'Disponible: ' + getAvailableStock(getFeaturedProduct()) }}
                                 </span>
                             </div>
 
                             <div class="flex flex-wrap items-center gap-3 pt-2">
                                 <button (click)="addFeaturedToCart(getFeaturedProduct())"
-                                        [disabled]="getFeaturedProduct().disponible === 0 || getFeaturedProduct().disponible === false"
+                                        [disabled]="isProductOutOfStock(getFeaturedProduct())"
                                         class="px-5 py-3 rounded-full bg-[#E3632C] hover:bg-[#4A1A26] disabled:opacity-50 text-white font-black text-xs shadow-md transition">
                                     Agregar al pedido →
                                 </button>
-                                <button (click)="getFeaturedProduct().disponible !== 0 && getFeaturedProduct().disponible !== false && openCustomizeModal(getFeaturedProduct())"
+                                <button (click)="!isProductOutOfStock(getFeaturedProduct()) && openCustomizeModal(getFeaturedProduct())"
+                                        [disabled]="isProductOutOfStock(getFeaturedProduct())"
                                         class="px-5 py-3 rounded-full bg-[#FDECEB] hover:bg-[#FCE1D2] text-[#4A1A26] border font-bold text-xs shadow-sm transition" style="border-color: #F3BCC4;">
                                     Ver detalle
                                 </button>
@@ -239,7 +258,8 @@
                                  [style.transform]="'rotate(' + (featuredIndex * 45) + 'deg)'">
 
                                 <!-- Platillo principal central -->
-                                <div (click)="getFeaturedProduct().disponible !== 0 && getFeaturedProduct().disponible !== false && openCustomizeModal(getFeaturedProduct())"
+                                <div (click)="!isProductOutOfStock(getFeaturedProduct()) && openCustomizeModal(getFeaturedProduct())"
+                                     [ngClass]="{'opacity-60 grayscale cursor-not-allowed': isProductOutOfStock(getFeaturedProduct())}"
                                      class="w-52 h-52 sm:w-60 sm:h-60 rounded-full overflow-hidden border-4 border-[#E3632C] shadow-2xl bg-white cursor-pointer transition-all duration-500 ease-out hover:scale-105"
                                      [style.transform]="'rotate(-' + (featuredIndex * 45) + 'deg)'">
                                     <img [src]="getFeaturedProduct().image" [alt]="getFeaturedProduct().name" class="w-full h-full object-cover transition-all duration-500">
@@ -489,17 +509,17 @@
                 <!-- GRID DE PLATILLOS -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     <div *ngFor="let p of getFilteredMenuProducts()"
-                         (click)="p.disponible !== 0 && p.disponible !== false && openCustomizeModal(p)"
+                         (click)="!isProductOutOfStock(p) && openCustomizeModal(p)"
                          class="bg-[#FFFFFF] rounded-2xl border overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between cursor-pointer group"
-                         [ngClass]="{'opacity-60 grayscale cursor-not-allowed': p.disponible === 0 || p.disponible === false}"
+                         [ngClass]="{'opacity-60 grayscale cursor-not-allowed': isProductOutOfStock(p)}"
                          style="border-color: #F3ECDA;">
 
                         <div>
                             <div class="h-44 w-full overflow-hidden bg-[#FBF6EC] relative">
                                 <img [src]="p.image" [alt]="p.name" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                                <span *ngIf="p.disponible === 0 || p.disponible === false"
+                                <span *ngIf="isProductOutOfStock(p)"
                                       class="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-[#4A1A26] text-white font-black text-[10px] uppercase">
-                                    Agotado
+                                    No disponible por el momento
                                 </span>
                             </div>
 
@@ -521,16 +541,16 @@
                                 ${{ p.price }}.00
                             </span>
 
-                            <button *ngIf="p.disponible !== 0 && p.disponible !== false"
+                            <button *ngIf="!isProductOutOfStock(p)"
                                     (click)="$event.stopPropagation(); openCustomizeModal(p)"
                                     aria-label="Personalizar y agregar"
                                     class="w-7 h-7 rounded-full bg-[#E3632C] hover:bg-[#4A1A26] text-white font-black text-sm flex items-center justify-center shadow transition">
                                 +
                             </button>
 
-                            <span *ngIf="p.disponible === 0 || p.disponible === false"
+                            <span *ngIf="isProductOutOfStock(p)"
                                   class="text-[10px] font-bold text-gray-400">
-                                No disp.
+                                No disponible
                             </span>
                         </div>
                     </div>
@@ -887,7 +907,7 @@
                             <div class="flex items-center gap-2 bg-[#FDECEB] px-2.5 py-1.5 rounded-xl border border-[#F3BCC4]">
                                 <button (click)="updateCartQty(item, -1)" class="font-black text-xs">-</button>
                                 <span class="font-black text-xs">{{ item.qty }}</span>
-                                <button (click)="updateCartQty(item, 1)" class="font-black text-xs">+</button>
+                                <button (click)="updateCartQty(item, 1)" [disabled]="!canIncreaseCartItem(item)" class="font-black text-xs disabled:opacity-40 disabled:cursor-not-allowed">+</button>
                             </div>
                             <span class="font-black text-sm" style="color: #E3632C;">${{ item.unitPrice * item.qty }}.00</span>
                         </div>
@@ -920,6 +940,10 @@
                 <div *ngIf="getDiscountAmount() > 0" class="flex justify-between text-xs font-extrabold text-emerald-700">
                     <span>Descuento ({{ appliedCoupon?.code }}):</span>
                     <span>-${{ getDiscountAmount() }}.00 MXN</span>
+                </div>
+                <div *ngIf="deliveryMode === 'uber'" class="flex justify-between text-xs font-bold text-gray-600">
+                    <span>Envío (gratis desde $300 o nivel Oro):</span>
+                    <span>{{ getDeliveryFee() === 0 ? 'Gratis' : '$' + getDeliveryFee() + '.00 MXN' }}</span>
                 </div>
                 <div class="flex justify-between text-sm font-extrabold" style="color: #4A1A26;">
                     <span>Total estimado:</span>
@@ -979,7 +1003,6 @@
                     <div class="bg-[#FFFFFF] rounded-3xl p-5 border space-y-3" style="border-color: #F3ECDA;">
                         <h4 class="text-sm font-black">Método de pago</h4>
                         <select [(ngModel)]="paymentMethod" (change)="onPaymentMethodChange()" class="w-full px-3 py-2.5 rounded-xl bg-[#FBF6EC] border border-[#F3ECDA] text-xs font-normal">
-                            <option value="Efectivo">Efectivo</option>
                             <option value="Transferencia">Transferencia</option>
                             <option value="Tarjeta">Tarjeta</option>
                         </select>
@@ -1046,14 +1069,18 @@
                             <span>Descuento</span>
                             <span>-${{ getDiscountAmount() }}.00</span>
                         </div>
+                        <div *ngIf="deliveryMode === 'uber'" class="flex justify-between">
+                            <span>Envío (gratis desde $300 o nivel Oro)</span>
+                            <span>{{ getDeliveryFee() === 0 ? 'Gratis' : '$' + getDeliveryFee() + '.00' }}</span>
+                        </div>
                         <div class="flex justify-between text-base font-black pt-2 border-t" style="color: #4A1A26; border-color: #F3ECDA;">
                             <span>Total</span>
                             <span class="text-[#E3632C]">${{ getCartTotal() }}.00 MXN</span>
                         </div>
                     </div>
 
-                    <button (click)="checkoutOrder()" [disabled]="isProcessingCard" class="w-full py-3.5 rounded-2xl text-white font-black text-xs shadow-xl bg-[#E3632C] hover:bg-[#4A1A26] disabled:opacity-60 transition">
-                        {{ isProcessingCard ? 'Procesando Pago...' : 'Pagar $' + getCartTotal() + '.00 →' }}
+                    <button (click)="checkoutOrder()" [disabled]="isProcessingCard || isSubmittingOrder" class="w-full py-3.5 rounded-2xl text-white font-black text-xs shadow-xl bg-[#E3632C] hover:bg-[#4A1A26] disabled:opacity-60 transition">
+                        {{ isProcessingCard ? 'Validando tarjeta...' : (isSubmittingOrder ? 'Guardando pedido...' : 'Pagar $' + getCartTotal() + '.00 →') }}
                     </button>
                 </div>
             </div>
@@ -1120,10 +1147,10 @@
                         <div class="flex items-center gap-3 bg-[#FDECEB] px-3.5 py-2 rounded-xl border" style="border-color: #F3BCC4;">
                             <button (click)="customQty = customQty > 1 ? customQty - 1 : 1" class="font-bold text-sm">-</button>
                             <span class="font-extrabold text-sm">{{ customQty }}</span>
-                            <button (click)="customQty = customQty + 1" class="font-bold text-sm">+</button>
+                            <button (click)="incrementCustomQty()" [disabled]="customQty >= getRemainingStock(selectedProduct)" class="font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed">+</button>
                         </div>
 
-                        <button (click)="confirmCustomizedAddToCart()" class="flex-1 py-3 px-4 rounded-2xl text-white font-black text-xs shadow-lg bg-[#E3632C] hover:bg-[#4A1A26] transition">
+                        <button (click)="confirmCustomizedAddToCart()" [disabled]="customQty < 1 || customQty > getRemainingStock(selectedProduct)" class="flex-1 py-3 px-4 rounded-2xl text-white font-black text-xs shadow-lg bg-[#E3632C] hover:bg-[#4A1A26] disabled:opacity-50 transition">
                             Agregar ${{ getCustomizedItemTotal() }}.00 ➔
                         </button>
                     </div>

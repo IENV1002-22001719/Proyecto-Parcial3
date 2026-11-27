@@ -57,13 +57,11 @@ export class CocinaComponent implements OnInit, OnDestroy {
   stockDeductionAlerts: StockDeductionAlert[] = [];
   requestedSupplierOrders: RequestedSupplierOrder[] = [];
 
-  private deductedOrderFolios: Set<string> = new Set<string>();
   private completedOrderFolios: Set<string> = new Set<string>();
   private printedOrderFolios: Set<string> = new Set<string>();
   private waitingTicketFolios: Set<string> = new Set<string>();
   private removedReservationKeys: Set<string> = new Set<string>();
   private closedCutFoliosByDate: { [dateStr: string]: string[] } = {};
-  private previousStockById: { [id: number]: number } = {};
 
   isSendingCorte: boolean = false;
   corteForm = {
@@ -96,9 +94,9 @@ export class CocinaComponent implements OnInit, OnDestroy {
   ];
 
   posSelectedOrder: any = null;
-  posPaymentMethod: string = 'Efectivo';
+  posSubTab: 'cobrar' | 'imprimidos' = 'cobrar';
+  posPaymentMethod: string = 'Transferencia';
   posTransferStatus: 'Recibido' | 'No recibido' = 'Recibido';
-  posCashReceived: number = 0;
 
   mermasList: any[] = [];
   newMerma = { producto: '', motivo: 'Cliente rechazo el producto', comentario: '' };
@@ -111,13 +109,11 @@ export class CocinaComponent implements OnInit, OnDestroy {
   private timer: any;
 
   ngOnInit() {
-    this.loadDeductedFoliosFromStorage();
     this.loadCompletedFoliosFromStorage();
     this.loadPrintedFoliosFromStorage();
     this.loadWaitingFoliosFromStorage();
     this.loadRemovedReservationsFromStorage();
     this.loadClosedCutFoliosFromStorage();
-    this.loadStockAlertsFromStorage();
     this.loadRequestedSupplierOrdersFromStorage();
     this.loadReservasForKitchen();
     this.cargarInventarioYProveedores(() => {
@@ -164,20 +160,6 @@ export class CocinaComponent implements OnInit, OnDestroy {
   private saveClosedCutFoliosToStorage() {
     try {
       localStorage.setItem('hanami_cocina_closed_cut_folios', JSON.stringify(this.closedCutFoliosByDate));
-    } catch {}
-  }
-
-  private loadDeductedFoliosFromStorage() {
-    try {
-      const raw = localStorage.getItem('hanami_cocina_deducted_folios');
-      const arr = raw ? JSON.parse(raw) : [];
-      if (Array.isArray(arr)) this.deductedOrderFolios = new Set(arr.map((f: any) => String(f)));
-    } catch {}
-  }
-
-  private saveDeductedFoliosToStorage() {
-    try {
-      localStorage.setItem('hanami_cocina_deducted_folios', JSON.stringify(Array.from(this.deductedOrderFolios)));
     } catch {}
   }
 
@@ -234,20 +216,6 @@ export class CocinaComponent implements OnInit, OnDestroy {
   private saveRemovedReservationsToStorage() {
     try {
       localStorage.setItem('hanami_cocina_removed_reservations', JSON.stringify(Array.from(this.removedReservationKeys)));
-    } catch {}
-  }
-
-  private loadStockAlertsFromStorage() {
-    try {
-      const raw = localStorage.getItem('hanami_cocina_stock_alerts');
-      const parsed = raw ? JSON.parse(raw) : [];
-      if (Array.isArray(parsed)) this.stockDeductionAlerts = parsed;
-    } catch {}
-  }
-
-  private saveStockAlertsToStorage() {
-    try {
-      localStorage.setItem('hanami_cocina_stock_alerts', JSON.stringify(this.stockDeductionAlerts.slice(0, 15)));
     } catch {}
   }
 
@@ -330,7 +298,7 @@ export class CocinaComponent implements OnInit, OnDestroy {
     this.reservasList = this.reservasList.filter(r => this.getReservationKey(r) !== key);
 
     if (targetReserva.id !== undefined && targetReserva.id !== null) {
-      fetch(`http://localhost:5000/api/reservas/${targetReserva.id}`, {
+      fetch(`http://localhost:5000/api/reservas?id=${encodeURIComponent(targetReserva.id)}`, {
         method: 'DELETE'
       }).catch(() => {});
     }
@@ -393,14 +361,23 @@ export class CocinaComponent implements OnInit, OnDestroy {
           this.rawMaterials = (data.rawMaterials || []).map((m: any) => {
             const idNum = Number(m.id);
             const currentStock = Number(m.stock) || 0;
-            this.previousStockById[idNum] = currentStock;
             return {
               ...m,
               stock: currentStock,
-              stock_minimo: Number(m.stock_minimo) || 0
+              stock_minimo: Number(m.stock_minimo) || 0,
+              faltante_produccion_gramos: Number(m.faltante_produccion_gramos) || 0,
+              productos_afectados: m.productos_afectados || []
             };
           });
           this.providers = data.providers || [];
+          this.stockDeductionAlerts = (data.notifications || [])
+            .filter((n: any) => /consumo venta|stock critico|stock crítico/i.test(n.mensaje || ''))
+            .map((n: any) => ({
+              id: String(n.id),
+              folio: ((n.mensaje || '').match(/\((HM-[^)]+)\)/i) || [])[1] || 'Inventario',
+              summary: n.mensaje || 'Movimiento de inventario registrado',
+              details: []
+            }));
           if (!this.pedidoProveedorForm.proveedor_id && this.providers.length > 0) {
             this.pedidoProveedorForm.proveedor_id = this.providers[0].id;
           }
@@ -412,7 +389,6 @@ export class CocinaComponent implements OnInit, OnDestroy {
               this.pedidoProveedorForm.unidades[m.id] = 'kg';
             }
           });
-          this.applyStockDeductionsForNewOrders();
           if (onLoaded) onLoaded();
         }
       })
@@ -421,12 +397,10 @@ export class CocinaComponent implements OnInit, OnDestroy {
       });
   }
 
-  getStockPercentage(mat: any): number {
-    const stock = Number(mat?.stock) || 0;
-    const min = Number(mat?.stock_minimo) || 0;
-    const target = min > 0 ? min * 3 : 10000;
-    const pct = Math.round((stock / target) * 100);
-    return Math.max(0, Math.min(100, pct));
+  getMaterialsNeedingAttention(): any[] {
+    return (this.rawMaterials || []).filter((m: any) =>
+      Number(m.stock || 0) <= Number(m.stock_minimo || 0) || Number(m.faltante_produccion_gramos || 0) > 0
+    );
   }
 
   getMaxSliderForUnit(unit: 'kg' | 'gramos' | 'pieza'): number {
@@ -443,65 +417,6 @@ export class CocinaComponent implements OnInit, OnDestroy {
     if (ratio >= 0.4) return '📦';
     if (ratio >= 0.15) return '⚖️';
     return '🍣';
-  }
-
-  private applyStockDeductionsForNewOrders() {
-    if (!Array.isArray(this.orders) || this.orders.length === 0 || this.rawMaterials.length === 0) {
-      return;
-    }
-
-    let changed = false;
-
-    for (const order of this.orders) {
-      const folioKey = String(order.folio || '');
-      const statusLower = (order.status || '').toLowerCase();
-      if (!folioKey || statusLower.includes('cancel') || this.deductedOrderFolios.has(folioKey)) {
-        continue;
-      }
-
-      const items = this.parseOrderItems(order.itemsText || '');
-      const orderDeductionDetails: string[] = [];
-      const productNames: string[] = [];
-
-      for (const item of items) {
-        productNames.push(`${item.qty}× ${item.name}`);
-        const multiplier = Math.max(1, Number(item.qty) || 1);
-        const textBlob = `${item.name} ${item.baseIngredients} ${item.extras}`.toLowerCase();
-
-        for (const mat of this.rawMaterials) {
-          const matName = (mat.name || '').toLowerCase().trim();
-          if (!matName) continue;
-
-          const firstWord = matName.split(/\s+/)[0];
-          const matches = textBlob.includes(matName) || (firstWord.length >= 4 && textBlob.includes(firstWord));
-
-          if (matches) {
-            const gramosToDeduct = (matName.includes('arroz') ? 120 : 60) * multiplier;
-            const prev = Number(mat.stock) || 0;
-            mat.stock = Math.max(0, prev - gramosToDeduct);
-            this.previousStockById[Number(mat.id)] = mat.stock;
-            orderDeductionDetails.push(`${mat.name}: -${gramosToDeduct}g`);
-            changed = true;
-          }
-        }
-      }
-
-      this.deductedOrderFolios.add(folioKey);
-
-      if (orderDeductionDetails.length > 0) {
-        this.stockDeductionAlerts.unshift({
-          id: `${folioKey}_${Date.now()}`,
-          folio: folioKey,
-          summary: `Se preparó ${productNames.join(', ')}`,
-          details: orderDeductionDetails
-        });
-      }
-    }
-
-    if (changed) {
-      this.saveDeductedFoliosToStorage();
-      this.saveStockAlertsToStorage();
-    }
   }
 
   getInsumosPorProveedorCocina() {
@@ -625,7 +540,7 @@ export class CocinaComponent implements OnInit, OnDestroy {
       return dateStr === dateKey;
     });
 
-    let ventasEfectivo = 0;
+    const ventasEfectivo = 0;
     let ventasTarjeta = 0;
     let ventasTransferencia = 0;
 
@@ -636,14 +551,12 @@ export class CocinaComponent implements OnInit, OnDestroy {
         ventasTarjeta += monto;
       } else if (pago.includes('transf')) {
         ventasTransferencia += monto;
-      } else {
-        ventasEfectivo += monto;
       }
     }
 
     const fondoInicial = Number(this.corteForm.fondo_inicial) || 0;
     const ingresoTotal = fondoInicial + ventasEfectivo + ventasTarjeta + ventasTransferencia;
-    const efectivoEnCaja = fondoInicial + ventasEfectivo;
+    const efectivoEnCaja = fondoInicial;
 
     return {
       numOrdenes: ordersOfDay.length,
@@ -768,7 +681,6 @@ export class CocinaComponent implements OnInit, OnDestroy {
             return !isDeliveredInDb;
           });
 
-          this.applyStockDeductionsForNewOrders();
           this.sincronizarMesasConOrdenesEnVivo();
         }
       })
@@ -813,7 +725,7 @@ export class CocinaComponent implements OnInit, OnDestroy {
         if (data && data.products) {
           this.products = data.products.map((p: any) => ({
             ...p,
-            isAvailable: p.disponible !== 0 && p.disponible !== false
+            isAvailable: p.disponible !== 0 && p.disponible !== false && Number(p.stockDisponible ?? p.stock) > 0
           }));
           if (this.products.length > 0) this.newMerma.producto = this.products[0].name;
         }
@@ -888,7 +800,8 @@ export class CocinaComponent implements OnInit, OnDestroy {
     const notes = order?.notes || '';
     const match = notes.match(/Pago:\s*([^|]+)/i);
     if (match && match[1].trim()) return match[1].trim();
-    return 'Efectivo';
+    if (match && match[1].trim().toLowerCase().includes('efectivo')) return 'Método anterior';
+    return 'Transferencia';
   }
 
   getDiscountLabel(order: any): string {
@@ -964,6 +877,46 @@ export class CocinaComponent implements OnInit, OnDestroy {
     });
   }
 
+  get printedTicketsList(): any[] {
+    const orders = this.allOrdersForHistory || [];
+    return orders.filter(order => {
+      const folio = String(order?.folio || '');
+      const notes = String(order?.notes || '');
+      return this.printedOrderFolios.has(folio) || /\[IMPRESO\]\s*POS:/i.test(notes);
+    });
+  }
+
+  reprintTicket(ticket: any) {
+    const printWindow = window.open('', '_blank', 'width=420,height=700');
+    if (!printWindow) {
+      alert('Permite las ventanas emergentes para volver a imprimir el ticket.');
+      return;
+    }
+    const safe = (value: any) => String(value ?? '').replace(/[&<>"']/g, char => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[char] as string));
+    printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Ticket ${safe(ticket.folio)}</title>
+      <style>body{font:14px Arial,sans-serif;color:#27151a;margin:24px}h1{font-size:20px;margin:0 0 6px}.muted{color:#555;font-size:12px}.line{border-top:1px dashed #777;margin:14px 0}.total{font-size:18px;font-weight:bold;text-align:right}</style>
+      </head><body><h1>Hanami Sushi</h1><div class="muted">León · Reimpresión de ticket</div><div class="line"></div>
+      <p><b>Folio:</b> ${safe(ticket.folio)}<br><b>Cliente:</b> ${safe(ticket.client || 'Mostrador')}<br><b>Fecha:</b> ${safe(ticket.createdAt || '')}</p>
+      <div class="line"></div><p><b>Detalle</b><br>${safe(ticket.itemsText || '').replace(/,\s*/g, '<br>')}</p>
+      <div class="line"></div><p class="total">Total: $${safe(ticket.total || 0)} MXN</p>
+      <p class="muted">Método de pago: ${safe(this.getPaymentLabel(ticket))}</p><script>window.onload=()=>{window.print();};</script></body></html>`);
+    printWindow.document.close();
+  }
+
+  actualizarEstadoMesa(mesa: any, estadoVista: string) {
+    if (!mesa) return;
+    mesa.estado = estadoVista === 'Libre' ? 'Disponible' : estadoVista;
+    mesa.reservadoManual = estadoVista !== 'Libre';
+    mesa.clienteActual = estadoVista === 'Libre' ? '' : (estadoVista === 'Reservada' ? 'Reserva manual' : 'Comensales de mesa');
+    fetch('http://localhost:5000/api/mesas/status', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: mesa.id, mesa: mesa.id, estado: mesa.estado, clienteActual: mesa.clienteActual })
+    }).catch(() => {});
+  }
+
   isTicketInWait(order: any): boolean {
     return this.waitingTicketFolios.has(String(order?.folio || ''));
   }
@@ -996,6 +949,24 @@ export class CocinaComponent implements OnInit, OnDestroy {
       if (typeFilter === 'uber') return t.includes('uber');
       return false;
     });
+  }
+
+  getOrdersForChannelOverview() {
+    return (this.orders || []).filter(order => {
+      const folio = String(order.folio || '');
+      const status = String(order.status || '').toLowerCase();
+      return !this.printedOrderFolios.has(folio) &&
+        !this.completedOrderFolios.has(folio) &&
+        !this.waitingTicketFolios.has(folio) &&
+        !status.includes('entregado') && !status.includes('completado') && !status.includes('cancelado');
+    });
+  }
+
+  getOrderChannelLabel(order: any): string {
+    const type = String(order?.type || '').toLowerCase();
+    if (type.includes('uber')) return 'Envío a domicilio';
+    if (type.includes('programado')) return 'Pedido programado';
+    return 'Al momento';
   }
 
   getChannelSubgroup(typeFilter: string, group: 'pendientes' | 'preparados' | 'listos' | 'uber' | 'completados') {
@@ -1075,14 +1046,22 @@ export class CocinaComponent implements OnInit, OnDestroy {
     }).catch(() => {});
   }
 
-  updateOrderStatus(order: any, newStatus: string) {
-    order.status = newStatus;
-
-    fetch('http://localhost:5000/api/orders/status', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folio: order.folio, status: newStatus })
-    }).catch(() => {});
+  async updateOrderStatus(order: any, newStatus: string) {
+    const previousStatus = order.status;
+    try {
+      const response = await fetch('http://localhost:5000/api/orders/status', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folio: order.folio, status: newStatus })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'No se pudo actualizar el pedido.');
+      order.status = newStatus;
+      if (data.stockDescontado) this.cargarInventarioYProveedores();
+    } catch (error: any) {
+      order.status = previousStatus;
+      alert(error.message || 'No se pudo actualizar el pedido.');
+    }
   }
 
   selectOrderForPOS(order: any) {
@@ -1094,18 +1073,11 @@ export class CocinaComponent implements OnInit, OnDestroy {
     } else if (detectedPayment.includes('tarj')) {
       this.posPaymentMethod = 'Tarjeta';
     } else {
-      this.posPaymentMethod = 'Efectivo';
+      this.posPaymentMethod = 'Transferencia';
     }
-    this.posCashReceived = Number(order.total) || 180;
   }
 
-  getCashChange(): number {
-    if (!this.posSelectedOrder) return 0;
-    const total = Number(this.posSelectedOrder.total) || 180;
-    return this.posCashReceived > total ? this.posCashReceived - total : 0;
-  }
-
-  posAction(actionType: string) {
+  async posAction(actionType: string) {
     if (!this.posSelectedOrder) return;
     const currentTicket = this.posSelectedOrder;
     const folioKey = String(currentTicket.folio || '');
@@ -1114,11 +1086,21 @@ export class CocinaComponent implements OnInit, OnDestroy {
       const extraPaymentDetail =
         this.posPaymentMethod === 'Transferencia'
           ? `Transferencia (${this.posTransferStatus})`
-          : this.posPaymentMethod === 'Tarjeta'
-            ? 'Tarjeta / Ventanilla'
-            : `Efectivo (Cambio: $${this.getCashChange()}.00)`;
+          : 'Tarjeta / Ventanilla';
 
       const updatedNotes = (currentTicket.notes || '') + ` | [IMPRESO] POS: ${extraPaymentDetail}`;
+      try {
+        const response = await fetch('http://localhost:5000/api/orders/status', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ folio: currentTicket.folio, status: 'Entregado', notes: updatedNotes })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.error || 'No se pudo finalizar el pedido.');
+      } catch (error: any) {
+        alert(error.message || 'No se pudo finalizar el pedido.');
+        return;
+      }
       currentTicket.notes = updatedNotes;
       currentTicket.status = 'Entregado';
 
@@ -1140,12 +1122,7 @@ export class CocinaComponent implements OnInit, OnDestroy {
       this.orders = this.orders.filter(o => String(o.folio || '') !== folioKey);
       this.posSelectedOrder = null;
 
-      fetch('http://localhost:5000/api/orders/status', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ folio: currentTicket.folio, status: 'Entregado', notes: updatedNotes })
-      }).catch(() => {});
-
+      this.cargarInventarioYProveedores();
       alert(`Ticket #${currentTicket.folio} confirmado, impreso y eliminado.`);
     } else if (actionType === 'espera') {
       if (folioKey) {

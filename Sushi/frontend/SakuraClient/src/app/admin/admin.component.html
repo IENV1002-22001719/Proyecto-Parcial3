@@ -372,7 +372,7 @@
                         <span class="text-[11px] text-slate-400 font-semibold block">Panel · Abastecimiento</span>
                         <h2 class="text-2xl sm:text-3xl font-black text-[#4A1A26]">Inventario · Materia prima</h2>
                     </div>
-                    <button (click)="setAdminSection('inventario'); abrirReabastecimiento()" class="px-4 py-2 rounded-full bg-[#E3632C] hover:bg-[#4A1A26] text-white font-bold text-xs shadow-sm transition">+ Reabastecer</button>
+                    <button (click)="setAdminSection('inventario'); abrirReabastecimiento()" class="px-4 py-2 rounded-full bg-[#E3632C] hover:bg-[#4A1A26] text-white font-bold text-xs shadow-sm transition">Reabastecer con proveedor</button>
                 </div>
 
                 <!-- 3 Tarjetas tipo referencia -->
@@ -387,17 +387,17 @@
                     </div>
                     <div class="bg-[#FFFFFF] p-5 rounded-2xl border flex items-center justify-between" style="border-color: #F3ECDA;">
                         <div>
-                            <span class="text-[11px] text-slate-500 font-semibold block">Bajo stock mínimo</span>
+                            <span class="text-[11px] text-slate-500 font-semibold block">Requieren atención</span>
                             <h3 class="text-2xl font-black text-[#D43F79] mt-1">{{ getStockHealthMetrics().criticos }}</h3>
-                            <span class="text-[11px] text-[#E3632C] font-bold mt-1 inline-block">Requiere compra</span>
+                            <span class="text-[11px] text-[#E3632C] font-bold mt-1 inline-block">Mínimo o producción</span>
                         </div>
                         <span class="w-9 h-9 rounded-xl bg-[#FDECEB] text-[#D43F79] flex items-center justify-center font-black text-xs">MIN</span>
                     </div>
                     <div class="bg-[#FFFFFF] p-5 rounded-2xl border flex items-center justify-between" style="border-color: #F3ECDA;">
                         <div>
-                            <span class="text-[11px] text-slate-500 font-semibold block">Costo de compras ref.</span>
-                            <h3 class="text-2xl font-black text-[#4A1A26] mt-1">${{ getEstimatedCosts() }}</h3>
-                            <span class="text-[11px] text-emerald-700 font-bold mt-1 inline-block">{{ getStockHealthMetrics().pctOptimo }}% en nivel óptimo</span>
+                            <span class="text-[11px] text-slate-500 font-semibold block">Órdenes por recibir</span>
+                            <h3 class="text-2xl font-black text-[#4A1A26] mt-1">{{ getPendingPurchaseOrders() }}</h3>
+                            <span class="text-[11px] text-emerald-700 font-bold mt-1 inline-block">Consulta en Proveedores y Reabastecer</span>
                         </div>
                         <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-xs">$</span>
                     </div>
@@ -405,6 +405,18 @@
 
                 <!-- Buscador + Tabla -->
                 <div class="bg-[#FFFFFF] p-5 rounded-2xl border space-y-4" style="border-color: #F3ECDA;">
+                    <div>
+                        <h3 class="text-lg font-black text-[#4A1A26]">Existencias de materia prima</h3>
+                        <p class="text-xs text-slate-500 mt-1">Compara lo que hay con el mínimo de compra y con lo necesario para producir las porciones registradas.</p>
+                    </div>
+                    <div *ngIf="getStockNeedsRestock().length" class="rounded-xl border border-[#F3BCC4] bg-[#FDECEB]/60 p-4 space-y-2">
+                        <p class="text-xs font-black uppercase tracking-wide text-[#D43F79]">Pendientes de abastecimiento</p>
+                        <p *ngFor="let m of getStockNeedsRestock()" class="text-xs text-[#4A1A26]">
+                            <strong>{{ m.name }}:</strong>
+                            <span *ngIf="m.stock <= m.stock_minimo"> {{ formatoStockConEquivalencia(m, m.stock) }} disponibles; mínimo {{ formatoStockConEquivalencia(m, m.stock_minimo) }}.</span>
+                            <span *ngIf="m.faltante_produccion_gramos > 0"> Faltan {{ formatoStockConEquivalencia(m, m.faltante_produccion_gramos) }} para cubrir las porciones registradas de {{ m.productos_afectados.join(', ') }}.</span>
+                        </p>
+                    </div>
                     <div class="flex flex-wrap justify-between items-center gap-3">
                         <input [(ngModel)]="inventorySearch" placeholder="Buscar insumo o proveedor..." class="w-full sm:w-72 px-4 py-2 rounded-full bg-[#FBF6EC] border text-xs font-bold focus:outline-none focus:border-[#E3632C]" style="border-color: #F3ECDA;">
                         <span class="text-xs font-bold text-slate-500">Mostrando {{ getFilteredInventory().length }} insumo(s)</span>
@@ -417,29 +429,41 @@
                                     <th class="p-3.5">Insumo</th>
                                     <th class="p-3.5">Proveedor</th>
                                     <th class="p-3.5">Stock Actual</th>
-                                    <th class="p-3.5">Unidades</th>
+                                    <th class="p-3.5">Mínimo</th>
+                                    <th class="p-3.5">Presentación</th>
                                     <th class="p-3.5">Costo Ref.</th>
                                     <th class="p-3.5">Estado</th>
+                                    <th class="p-3.5 text-right">Acción</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y font-bold" style="border-color: #F3ECDA;">
-                                <tr *ngFor="let m of getFilteredInventory()" [ngClass]="m.stock <= m.stock_minimo ? 'bg-[#FDECEB]/50' : 'hover:bg-[#FBF6EC]/60'">
+                                <tr *ngFor="let m of getFilteredInventory()" [ngClass]="(m.stock <= m.stock_minimo || m.faltante_produccion_gramos > 0) ? 'bg-[#FDECEB]/50' : 'hover:bg-[#FBF6EC]/60'">
                                     <td class="p-3.5 text-[#4A1A26] text-sm">{{ m.name }}</td>
                                     <td class="p-3.5 text-slate-600">{{ m.proveedor_nombre }}</td>
                                     <td class="p-3.5">
-                                        <span [ngClass]="m.stock <= m.stock_minimo ? 'text-[#D43F79]' : 'text-emerald-700'">{{ m.stock }} g</span>
+                                        <span [ngClass]="(m.stock <= m.stock_minimo || m.faltante_produccion_gramos > 0) ? 'text-[#D43F79]' : 'text-emerald-700'">{{ formatoStockConEquivalencia(m, m.stock) }}</span>
                                     </td>
-                                    <td class="p-3.5 text-slate-700">{{ m.stock_unidades }} {{ m.unit }}</td>
+                                    <td class="p-3.5 text-slate-600">{{ formatoStockConEquivalencia(m, m.stock_minimo) }}</td>
+                                    <td class="p-3.5 text-slate-700">{{ obtenerPresentacionCompra(m) }}</td>
                                     <td class="p-3.5 text-slate-700">${{ m.costo }}</td>
                                     <td class="p-3.5">
                                         <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold"
-                                              [ngClass]="m.stock <= m.stock_minimo ? 'bg-[#FDECEB] text-[#D43F79]' : 'bg-emerald-100 text-emerald-800'">
-                                            {{ m.stock <= m.stock_minimo ? '• Bajo stock' : '• Activo' }}
+                                              [ngClass]="(m.stock <= m.stock_minimo || (m.productos_afectados || []).length) ? 'bg-[#FDECEB] text-[#D43F79]' : 'bg-emerald-100 text-emerald-800'">
+                                            {{ m.stock <= m.stock_minimo ? '• Bajo mínimo' : ((m.productos_afectados || []).length ? '• Limita platillos' : '• Activo') }}
                                         </span>
+                                        <div *ngIf="m.faltante_produccion_gramos > 0" class="mt-1 text-[10px] text-[#D43F79] max-w-56">
+                                            Faltan {{ formatoStockConEquivalencia(m, m.faltante_produccion_gramos) }} para producción planeada
+                                        </div>
+                                    </td>
+                                    <td class="p-3.5 text-right">
+                                        <button (click)="abrirReabastecimientoParaInsumo(m)" class="px-3 py-1.5 rounded-full text-[10px] font-black transition"
+                                                [ngClass]="(m.stock <= m.stock_minimo || m.faltante_produccion_gramos > 0) ? 'bg-[#E3632C] text-white hover:bg-[#4A1A26]' : 'bg-[#FBF6EC] text-[#4A1A26] hover:bg-[#FCE1D2]'">
+                                            Reabastecer con proveedor
+                                        </button>
                                     </td>
                                 </tr>
                                 <tr *ngIf="getFilteredInventory().length === 0">
-                                    <td colspan="6" class="p-6 text-center text-slate-400">No se encontraron materias primas.</td>
+                                    <td colspan="8" class="p-6 text-center text-slate-400">No se encontraron materias primas.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -454,11 +478,11 @@
                         <span class="text-[11px] text-slate-400 font-semibold block">Panel · Cadena de Suministro</span>
                         <h2 class="text-2xl sm:text-3xl font-black text-[#4A1A26]">Proveedores y Reabastecer</h2>
                         <p class="text-xs text-slate-500 font-bold mt-1">{{ providers.length }} proveedores · {{ rawMaterials.length }} insumos · {{ purchaseOrders.length }} órdenes</p>
+                        <p class="text-xs text-slate-500 mt-2">Aquí registras proveedores, solicitas insumos y confirmas su recepción. El inventario aumenta cuando la orden se marca como entregada.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <button (click)="abrirReabastecimiento()" class="px-4 py-2 rounded-full bg-[#E3632C] hover:bg-[#4A1A26] text-white font-bold text-xs shadow-sm transition">Reabastecer</button>
+                        <button (click)="abrirReabastecimiento()" class="px-4 py-2 rounded-full bg-[#E3632C] hover:bg-[#4A1A26] text-white font-bold text-xs shadow-sm transition">+ Nueva orden</button>
                         <button (click)="abrirModalNuevoProveedor()" class="px-4 py-2 rounded-full bg-[#FCE1D2] hover:bg-[#F3BCC4] text-[#4A1A26] font-bold text-xs shadow-sm transition">+ Registrar Proveedor</button>
-                        <button (click)="abrirModalNuevoInsumo()" class="px-4 py-2 rounded-full bg-[#FFFFFF] hover:bg-[#FBF6EC] text-[#4A1A26] border font-bold text-xs shadow-sm transition" style="border-color: #F3ECDA;">+ Registrar Insumo</button>
                         <button (click)="abrirPanelEliminar()" class="px-4 py-2 rounded-full bg-[#D43F79] hover:bg-[#4A1A26] text-white font-bold text-xs shadow-sm transition">Eliminar</button>
                     </div>
                 </div>
@@ -499,7 +523,7 @@
                                 <tbody class="divide-y font-bold" style="border-color: #F3ECDA;">
                                     <tr *ngFor="let m of getInsumosParaEliminar()">
                                         <td class="p-3 text-[#4A1A26]">{{ m.name }}</td>
-                                        <td class="p-3 text-slate-700">{{ m.stock }} g ({{ m.stock_unidades }} {{ m.unit }})</td>
+                                        <td class="p-3 text-slate-700">{{ formatoStockConEquivalencia(m, m.stock) }}</td>
                                         <td class="p-3 text-slate-700">${{ m.costo }}</td>
                                         <td class="p-3 text-right">
                                             <button (click)="eliminarInsumo(m)" class="px-3 py-1 rounded-full bg-[#D43F79] hover:bg-[#4A1A26] text-white text-[11px] font-bold">Eliminar Insumo</button>
@@ -541,17 +565,19 @@
                     </div>
                 </div>
 
-                <!-- FORMULARIO REABASTECIMIENTO -->
+                <!-- ORDEN DE COMPRA + DIRECTORIO EN DOS COLUMNAS -->
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 items-start">
+                  <div class="xl:col-span-1">
                 <div *ngIf="showRestockBox" class="bg-[#FFFFFF] border rounded-2xl p-6 shadow-sm space-y-4" style="border-color: #F3ECDA;">
                     <div class="flex justify-between items-center">
                         <h3 class="text-xl font-black text-[#E3632C]">Orden de Reabastecimiento</h3>
                         <button (click)="showRestockBox = false" class="text-xs font-bold text-slate-500 hover:text-[#D43F79]">Cerrar</button>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-bold">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold">
                         <div>
                             <label class="block mb-1 text-[#4A1A26]">Proveedor:</label>
-                            <select [(ngModel)]="restockForm.proveedor_id" class="w-full p-2.5 rounded-xl bg-[#FBF6EC] border" style="border-color: #F3ECDA;">
+                            <select [(ngModel)]="restockForm.proveedor_id" (change)="alCambiarProveedorReabastecimiento()" class="w-full p-2.5 rounded-xl bg-[#FBF6EC] border" style="border-color: #F3ECDA;">
                                 <option *ngFor="let p of providers" [ngValue]="p.id">{{ p.nombre_empresa }}</option>
                             </select>
                         </div>
@@ -562,10 +588,6 @@
                                 <option value="Entregado">Entregado (Sumar al inventario ahora)</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block mb-1 text-[#4A1A26]">Precio General ($):</label>
-                            <input type="number" [ngModel]="calcularPrecioGeneral()" (ngModelChange)="restockForm.precioGeneralManual = $event" class="w-full p-2.5 rounded-xl bg-[#FDECEB] border font-black text-[#4A1A26]" style="border-color: #F3BCC4;">
-                        </div>
                     </div>
 
                     <div class="space-y-2 max-h-72 overflow-y-auto p-3 bg-[#FBF6EC] rounded-xl border" style="border-color: #F3ECDA;">
@@ -574,25 +596,17 @@
                                 <input type="checkbox" [(ngModel)]="restockForm.seleccionados[m.id]" class="w-4 h-4 accent-[#E3632C]">
                                 <div>
                                     <span class="text-[#4A1A26] block">{{ m.name }}</span>
-                                    <span class="text-[10px] text-slate-500">Stock: {{ m.stock }}g</span>
+                                    <span class="text-[10px] text-slate-500">Actual: {{ formatoStockConEquivalencia(m, m.stock) }} · Mínimo: {{ formatoStockConEquivalencia(m, m.stock_minimo) }}</span>
+                                    <span *ngIf="m.faltante_produccion_gramos > 0" class="block text-[10px] text-[#D43F79]">Faltan {{ formatoStockConEquivalencia(m, m.faltante_produccion_gramos) }} para producción.</span>
                                 </div>
                             </label>
 
                             <div class="flex flex-wrap items-center gap-2">
-                                <select [(ngModel)]="restockForm.unidades[m.id]" class="p-1.5 rounded-xl font-bold bg-[#FBF6EC] border" style="border-color: #F3ECDA;">
-                                    <option value="pieza">Pieza</option>
-                                    <option value="gramos">Gramos</option>
-                                    <option value="kg">Kg</option>
-                                </select>
-
                                 <input type="number" [(ngModel)]="restockForm.cantidades[m.id]" min="0.1" step="0.5" class="w-24 p-1.5 rounded-xl bg-[#FBF6EC] border font-bold text-right" style="border-color: #F3ECDA;">
+                                <span class="text-[10px] text-[#4A1A26] font-black whitespace-nowrap">{{ etiquetaUnidadCompra(m, restockForm.cantidades[m.id]) }}</span>
 
-                                <div class="flex items-center gap-1">
-                                    <span class="text-[10px] text-slate-500 font-bold">$</span>
-                                    <input type="number" [(ngModel)]="restockForm.preciosUnitarios[m.id]" min="0" step="10" class="w-24 p-1.5 rounded-xl bg-[#FBF6EC] border font-bold text-right" style="border-color: #F3ECDA;">
-                                </div>
-
-                                <span class="font-black text-[#E3632C] min-w-[75px] text-right">= ${{ calcularSubtotalItem(m) }}</span>
+                                <span class="text-[10px] text-slate-600 font-bold whitespace-nowrap">Precio fijo: ${{ m.costo }} / {{ etiquetaUnidadCompra(m, 1) }}</span>
+                                <span class="font-black text-[#E3632C] min-w-[75px] text-right">Subtotal: ${{ calcularSubtotalItem(m) | number:'1.2-2' }}</span>
                             </div>
                         </div>
                         <p *ngIf="getInsumosParaReabastecer().length === 0" class="text-xs text-slate-400 font-bold text-center py-6">
@@ -602,7 +616,7 @@
 
                     <div class="flex flex-wrap justify-between items-center gap-3 pt-1">
                         <div class="text-sm font-black text-[#4A1A26]">
-                            Total General: <span class="text-[#E3632C]">${{ calcularPrecioGeneral() }}.00</span>
+                            Total General: <span class="text-[#E3632C]">${{ calcularPrecioGeneral() | number:'1.2-2' }}</span>
                         </div>
                         <div class="flex gap-2">
                             <button (click)="enviarOrdenReabastecimiento()" class="px-5 py-2 rounded-full bg-[#E3632C] hover:bg-[#4A1A26] text-white text-xs font-black">Guardar Reabastecimiento</button>
@@ -610,10 +624,61 @@
                         </div>
                     </div>
                 </div>
+                <div *ngIf="!showRestockBox" class="bg-[#FFFFFF] border rounded-2xl p-6 shadow-sm space-y-3" style="border-color: #F3ECDA;">
+                    <h3 class="text-lg font-black text-[#4A1A26]">Orden de reabastecimiento</h3>
+                    <p class="text-xs text-slate-500">Elige un proveedor para preparar una orden con sus insumos.</p>
+                    <button (click)="abrirReabastecimiento()" class="w-full px-4 py-2.5 rounded-xl bg-[#E3632C] hover:bg-[#4A1A26] text-white text-xs font-black">Crear nueva orden</button>
+                </div>
+                  </div>
+                  <div class="xl:col-span-2 bg-[#FFFFFF] border rounded-2xl p-5 shadow-sm space-y-4" style="border-color: #F3ECDA;">
+                    <div>
+                      <h3 class="text-lg font-black text-[#4A1A26]">Directorio de proveedores</h3>
+                      <p class="text-xs text-slate-500">Cada proveedor muestra únicamente las materias primas que tiene asignadas.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[70vh] overflow-y-auto pr-1">
+                      <div *ngFor="let prov of providers" class="p-4 rounded-2xl bg-[#FBF6EC] border space-y-3" style="border-color: #F3ECDA;">
+                        <div class="flex justify-between items-start gap-2">
+                          <div>
+                            <h4 class="font-black text-sm text-[#4A1A26]">{{ prov.nombre_empresa }}</h4>
+                            <p class="text-[11px] text-slate-500">{{ prov.contacto }} · {{ prov.telefono }}</p>
+                            <p class="text-[10px] text-slate-500">{{ prov.insumo_principal }}</p>
+                          </div>
+                          <span class="px-2 py-1 rounded-full bg-white text-[10px] font-bold text-[#4A1A26]">{{ getMaterialsByProvider(prov.id).length }} insumos</span>
+                        </div>
+                        <div class="space-y-2">
+                          <div *ngFor="let m of getMaterialsByProvider(prov.id)" class="p-3 rounded-xl bg-white border" style="border-color: #F3ECDA;">
+                            <div class="flex justify-between items-start gap-2">
+                              <div>
+                                <p class="text-xs font-black text-[#4A1A26]">{{ m.name }}</p>
+                                <p class="text-[10px] text-slate-500">Actual: {{ formatoStockConEquivalencia(m, m.stock) }} · Mínimo: {{ formatoStockConEquivalencia(m, m.stock_minimo) }}</p>
+                                <p *ngIf="m.faltante_produccion_gramos > 0" class="text-[10px] text-[#D43F79]">Faltan {{ formatoStockConEquivalencia(m, m.faltante_produccion_gramos) }} para producción planeada.</p>
+                              </div>
+                              <button (click)="abrirReabastecimientoParaInsumo(m)" class="px-2.5 py-1.5 rounded-lg bg-[#E3632C] text-white text-[10px] font-black hover:bg-[#4A1A26]">Reabastecer</button>
+                            </div>
+                          </div>
+                          <p *ngIf="getMaterialsByProvider(prov.id).length === 0" class="text-[11px] text-slate-400">Sin insumos asociados.</p>
+                        </div>
+                        <div class="flex gap-2">
+                          <button (click)="abrirReabastecimiento(prov.id)" class="flex-1 px-3 py-2 rounded-xl bg-[#E3632C] text-white text-[11px] font-black">Orden a este proveedor</button>
+                          <button (click)="abrirModalNuevoInsumo(prov.id)" class="px-3 py-2 rounded-xl bg-white text-[#4A1A26] border text-[11px] font-black" style="border-color: #F3ECDA;">+ Insumo</button>
+                        </div>
+                      </div>
+                      <p *ngIf="providers.length === 0" class="md:col-span-2 text-center py-8 text-sm text-slate-400">Aún no hay proveedores. Registra uno para comenzar.</p>
+                    </div>
+                  </div>
+                </div>
 
                 <!-- FORMULARIO NUEVO PROVEEDOR -->
-                <div *ngIf="showNewProviderModal" class="bg-[#FFFFFF] border rounded-2xl p-6 shadow-sm space-y-4" style="border-color: #F3ECDA;">
-                    <h3 class="font-bold text-sm text-[#4A1A26]">Registrar Nuevo Proveedor</h3>
+                <div *ngIf="showNewProviderModal" class="fixed inset-0 z-[80] bg-slate-950/55 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" (click)="showNewProviderModal = false">
+                  <div role="dialog" aria-modal="true" aria-label="Registrar proveedor" class="w-full max-w-3xl max-h-[92vh] overflow-y-auto bg-[#FFFFFF] border rounded-3xl p-6 shadow-2xl space-y-4" style="border-color: #F3ECDA;" (click)="$event.stopPropagation()">
+                    <div class="flex items-center justify-between gap-3">
+                      <div>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#E3632C]">Cadena de suministro Hanami</span>
+                        <h3 class="font-black text-xl text-[#4A1A26] mt-1">Registrar Nuevo Proveedor</h3>
+                        <p class="text-xs text-slate-500 mt-1">Registra sus datos y, si quieres, los insumos que ofrece.</p>
+                      </div>
+                      <button (click)="showNewProviderModal = false" aria-label="Cerrar ventana" class="w-9 h-9 rounded-full bg-[#FBF6EC] text-[#4A1A26] hover:bg-[#FDECEB] text-xl">×</button>
+                    </div>
                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs font-bold">
                         <input [(ngModel)]="newProvider.nombre_empresa" placeholder="Nombre de la empresa" class="p-2.5 rounded-xl bg-[#FBF6EC] border" style="border-color: #F3ECDA;">
                         <input [(ngModel)]="newProvider.contacto" placeholder="Nombre de contacto" class="p-2.5 rounded-xl bg-[#FBF6EC] border" style="border-color: #F3ECDA;">
@@ -647,11 +712,20 @@
                         <button (click)="registrarProveedor()" class="px-4 py-2 bg-[#E3632C] text-white rounded-full text-xs font-bold">Guardar Proveedor</button>
                         <button (click)="showNewProviderModal = false" class="px-4 py-2 bg-[#FDECEB] text-[#4A1A26] rounded-full text-xs font-bold">Cancelar</button>
                     </div>
+                  </div>
                 </div>
 
                 <!-- FORMULARIO NUEVO INSUMO -->
-                <div *ngIf="showNewIngredientBox" class="bg-[#FFFFFF] border rounded-2xl p-6 shadow-sm space-y-3" style="border-color: #F3ECDA;">
-                    <h3 class="font-bold text-sm text-[#4A1A26]">Registrar Insumo</h3>
+                <div *ngIf="showNewIngredientBox" class="fixed inset-0 z-[80] bg-slate-950/55 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" (click)="showNewIngredientBox = false">
+                  <div role="dialog" aria-modal="true" aria-label="Registrar insumo para proveedor" class="w-full max-w-3xl bg-[#FFFFFF] border rounded-3xl p-6 shadow-2xl space-y-4" style="border-color: #F3ECDA;" (click)="$event.stopPropagation()">
+                    <div class="flex items-center justify-between gap-3">
+                      <div>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#E3632C]">Proveedor asignado</span>
+                        <h3 class="font-bold text-lg text-[#4A1A26]">Agregar insumo</h3>
+                        <p class="text-xs text-slate-500">El insumo se registrará asociado a este proveedor.</p>
+                      </div>
+                      <button (click)="showNewIngredientBox = false" aria-label="Cerrar ventana" class="w-9 h-9 rounded-full bg-[#FBF6EC] text-[#4A1A26] hover:bg-[#FDECEB] text-xl">×</button>
+                    </div>
                     <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 text-xs font-bold">
                         <select [(ngModel)]="newIng.proveedor_id" class="p-2.5 rounded-xl bg-[#FBF6EC] border" style="border-color: #F3ECDA;">
                             <option [ngValue]="null" disabled>Selecciona proveedor...</option>
@@ -670,6 +744,7 @@
                         <button (click)="guardarInsumo()" class="px-4 py-2 bg-[#E3632C] text-white rounded-full text-xs font-bold">Guardar Insumo</button>
                         <button (click)="showNewIngredientBox = false" class="px-4 py-2 bg-[#FDECEB] text-[#4A1A26] rounded-full text-xs font-bold">Cancelar</button>
                     </div>
+                  </div>
                 </div>
 
                 <!-- HISTORIAL DE ÓRDENES DE COMPRA -->
@@ -711,41 +786,6 @@
                     </div>
                 </div>
 
-                <!-- VISTA LIMPIA DE PROVEEDORES E INSUMOS -->
-                <div class="space-y-4 max-h-[65vh] overflow-y-auto pr-2">
-                    <div *ngFor="let prov of providers" class="bg-[#FFFFFF] border rounded-2xl p-5 shadow-sm space-y-4" style="border-color: #F3ECDA;">
-                        <div class="flex flex-wrap justify-between items-center gap-2">
-                            <div>
-                                <h3 class="text-lg font-black text-[#4A1A26]">{{ prov.nombre_empresa }}</h3>
-                                <p class="text-xs text-slate-500 font-bold">{{ prov.contacto }} · {{ prov.telefono }} · {{ prov.insumo_principal }}</p>
-                            </div>
-                            <button (click)="abrirReabastecimiento(prov.id)" class="px-3.5 py-1.5 rounded-full bg-[#FCE1D2] hover:bg-[#F3BCC4] text-[#4A1A26] text-xs font-extrabold transition">
-                                Reabastecer aquí
-                            </button>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div *ngFor="let m of getMaterialsByProvider(prov.id)"
-                                 class="p-3.5 rounded-xl text-xs space-y-1 border"
-                                 [ngClass]="m.stock <= m.stock_minimo ? 'bg-[#FDECEB]/70 border-[#F3BCC4]' : 'bg-[#FBF6EC] border-[#F3ECDA]'">
-                                <div class="flex justify-between items-start gap-2">
-                                    <span class="font-extrabold text-[#4A1A26] text-sm">{{ m.name }}</span>
-                                    <span class="px-2 py-0.5 rounded-full bg-[#FFFFFF] text-[#E3632C] text-[10px] font-black shrink-0 border" style="border-color: #F3ECDA;">{{ m.abc }}</span>
-                                </div>
-                                <p class="text-slate-700 font-bold">
-                                    <span [ngClass]="m.stock <= m.stock_minimo ? 'text-[#D43F79]' : 'text-emerald-800'">
-                                        {{ m.stock }} g
-                                    </span>
-                                    <span class="text-slate-500 font-semibold"> ({{ m.stock_unidades }} {{ m.unit }})</span>
-                                </p>
-                                <p class="text-[11px] text-slate-500">Mín: {{ m.stock_minimo }} g · Costo: ${{ m.costo }}</p>
-                            </div>
-                            <p *ngIf="getMaterialsByProvider(prov.id).length === 0" class="text-xs text-slate-400 font-bold col-span-full py-2">
-                                Sin insumos asignados todavía.
-                            </p>
-                        </div>
-                    </div>
-                </div>
             </section>
 
             <!-- 4. CATÁLOGO DE PLATILLOS -->
@@ -761,8 +801,15 @@
                     </div>
                 </div>
 
-                <div *ngIf="showModal" class="bg-[#FFFFFF] border p-6 rounded-2xl shadow-sm space-y-4" style="border-color: #F3ECDA;">
-                    <h3 class="font-bold text-base text-[#4A1A26]">{{ isEditing ? 'Editar Platillo' : 'Registrar Nuevo Platillo' }}</h3>
+                <div *ngIf="showModal" class="fixed inset-0 z-[80] bg-slate-950/55 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" (click)="showModal = false">
+                  <div role="dialog" aria-modal="true" [attr.aria-label]="isEditing ? 'Editar platillo' : 'Registrar platillo'" class="w-full max-w-2xl max-h-[92vh] overflow-y-auto bg-[#FFFFFF] border p-6 rounded-3xl shadow-2xl space-y-4" style="border-color: #F3ECDA;" (click)="$event.stopPropagation()">
+                    <div class="flex items-center justify-between gap-4">
+                    <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-[#E3632C]">Catálogo Hanami</span>
+                    <h3 class="font-bold text-xl text-[#4A1A26]">{{ isEditing ? 'Editar Platillo' : 'Registrar Nuevo Platillo' }}</h3>
+                    </div>
+                    <button (click)="showModal = false" aria-label="Cerrar ventana" class="w-9 h-9 rounded-full bg-[#FBF6EC] text-[#4A1A26] hover:bg-[#FDECEB] text-xl">×</button>
+                    </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold">
                         <input [(ngModel)]="modalProduct.name" placeholder="Nombre del platillo" class="p-2.5 rounded-xl bg-[#FBF6EC] border" style="border-color: #F3ECDA;">
                         <input [(ngModel)]="modalProduct.price" type="number" placeholder="Precio ($)" class="p-2.5 rounded-xl bg-[#FBF6EC] border" style="border-color: #F3ECDA;">
@@ -785,6 +832,7 @@
                         <button (click)="saveModalProduct()" class="px-4 py-2 bg-[#E3632C] text-white rounded-full text-xs font-bold">Guardar Platillo</button>
                         <button (click)="showModal = false" class="px-4 py-2 bg-[#FDECEB] text-[#4A1A26] rounded-full text-xs font-bold">Cancelar</button>
                     </div>
+                  </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 max-h-[65vh] overflow-y-auto pr-2">
@@ -797,7 +845,11 @@
                             <h3 class="font-bold text-base text-[#4A1A26]">{{ p.name }}</h3>
                             <p class="text-xs text-slate-500">{{ p.description }}</p>
                             <div class="text-xs font-bold text-emerald-800">Precio: ${{ p.price }}.00</div>
-                            <div class="text-xs font-extrabold text-[#4A1A26] bg-[#FBF6EC] border p-2 rounded-xl" style="border-color: #F3ECDA;">Stock: <strong>{{ p.stock }} porciones</strong></div>
+                            <div class="text-xs font-extrabold text-[#4A1A26] bg-[#FBF6EC] border p-2 rounded-xl" style="border-color: #F3ECDA;">Stock físico: <strong>{{ p.stock }} porciones</strong> · Receta: <strong>{{ p.stockPorReceta ?? p.stock }}</strong> · Comprometidas: <strong>{{ p.stockReservado || 0 }}</strong> · Disponibles: <strong>{{ p.stockDisponible ?? p.stock }}</strong></div>
+                            <div *ngIf="p.insumosFaltantes?.length" class="bg-[#FDECEB] border border-[#F3BCC4] p-2.5 rounded-xl space-y-1">
+                                <p class="text-[10px] font-black uppercase text-[#D43F79]">Revisar abastecimiento</p>
+                                <p *ngFor="let alerta of p.insumosFaltantes" class="text-[10px] text-[#4A1A26]">{{ alerta.mensaje }}</p>
+                            </div>
                             <div class="text-[11px] text-slate-600">Ingredientes: <em>{{ p.ingredients?.join(', ') }}</em></div>
                         </div>
 
@@ -827,7 +879,6 @@
                                 <th class="p-4">Tipo de Corte</th>
                                 <th class="p-4">Responsable</th>
                                 <th class="p-4">Fondo Inicial</th>
-                                <th class="p-4">Efectivo</th>
                                 <th class="p-4">Tarjeta / Transf.</th>
                                 <th class="p-4">Ingreso Total</th>
                                 <th class="p-4 text-right">Fecha</th>
@@ -838,13 +889,12 @@
                                 <td class="p-4 font-bold text-[#4A1A26]">{{ c.tipo_corte }}</td>
                                 <td class="p-4 text-xs font-bold">{{ c.cajero || 'Personal Cocina' }}</td>
                                 <td class="p-4 text-xs">${{ c.fondo_inicial }}</td>
-                                <td class="p-4 text-xs text-emerald-700 font-bold">${{ c.ventas_efectivo }}</td>
                                 <td class="p-4 text-xs">${{ c.ventas_tarjeta }} / ${{ c.ventas_transferencia }}</td>
                                 <td class="p-4 text-sm font-black text-[#4A1A26]">${{ c.ingreso_total }}</td>
                                 <td class="p-4 text-right text-xs text-slate-500">{{ c.fecha_corte }}</td>
                             </tr>
                             <tr *ngIf="cortes.length === 0">
-                                <td colspan="7" class="p-6 text-center text-xs text-slate-400">Aún no hay cortes de caja registrados.</td>
+                                <td colspan="6" class="p-6 text-center text-xs text-slate-400">Aún no hay cortes de caja registrados.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -960,44 +1010,77 @@
             <section *ngIf="adminSection === 'usuarios'" class="space-y-6">
                 <div>
                     <span class="text-[11px] text-slate-400 font-semibold block">Panel · Administración</span>
-                    <h2 class="text-2xl sm:text-3xl font-black text-[#4A1A26]">Gestión de Usuarios (Personal de Trabajo)</h2>
+                    <h2 class="text-2xl sm:text-3xl font-black text-[#4A1A26]">Usuarios · Personal</h2>
+                    <p class="text-xs text-slate-500 mt-1">Administra accesos del equipo, sus datos de contacto, rol y turno.</p>
                 </div>
 
-                <div class="bg-[#FFFFFF] border p-6 rounded-2xl space-y-4 shadow-sm" style="border-color: #F3ECDA;">
-                    <h3 class="font-bold text-sm text-[#4A1A26]">Registrar Personal / Administrador / Cocina</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs font-bold">
-                        <input [(ngModel)]="newUser.nombre" placeholder="Nombre completo" class="p-2.5 rounded-xl bg-[#FBF6EC] border" style="border-color: #F3ECDA;">
-                        <input [(ngModel)]="newUser.correo" placeholder="Correo electrónico" class="p-2.5 rounded-xl bg-[#FBF6EC] border" style="border-color: #F3ECDA;">
-                        <input [(ngModel)]="newUser.telefono" placeholder="Teléfono (10 dígitos)" class="p-2.5 rounded-xl bg-[#FBF6EC] border" style="border-color: #F3ECDA;">
-                        <select [(ngModel)]="newUser.rol" class="p-2.5 rounded-xl bg-[#FBF6EC] border" style="border-color: #F3ECDA;">
-                            <option value="admin">Administrador</option>
-                            <option value="cocina">Cocina</option>
-                        </select>
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 items-stretch">
+                    <div class="xl:col-span-1 bg-[#FFFFFF] border p-6 rounded-2xl space-y-4 shadow-sm" style="border-color: #F3ECDA;">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-[#E3632C]">Accesos del equipo</span>
+                            <h3 class="font-black text-lg text-[#4A1A26] mt-1">Agregar personal</h3>
+                            <p class="text-xs text-slate-500 mt-1">Asigna el rol que tendrá dentro del sistema.</p>
+                        </div>
+                        <div class="space-y-3 text-xs font-bold">
+                            <label class="block text-[#4A1A26]">Nombre completo
+                                <input [(ngModel)]="newUser.nombre" placeholder="Ej. Kenji Takahashi" class="mt-1 w-full p-2.5 rounded-xl bg-[#FBF6EC] border font-medium" style="border-color: #F3ECDA;">
+                            </label>
+                            <label class="block text-[#4A1A26]">Usuario / correo de acceso
+                                <input [(ngModel)]="newUser.correo" type="email" placeholder="Ej. kenji@hanami.com" class="mt-1 w-full p-2.5 rounded-xl bg-[#FBF6EC] border font-medium" style="border-color: #F3ECDA;">
+                            </label>
+                            <label class="block text-[#4A1A26]">Teléfono (10 dígitos)
+                                <input [(ngModel)]="newUser.telefono" type="tel" inputmode="numeric" maxlength="10" placeholder="4771234567" class="mt-1 w-full p-2.5 rounded-xl bg-[#FBF6EC] border font-medium" style="border-color: #F3ECDA;">
+                            </label>
+                            <label class="block text-[#4A1A26]">Rol en el sistema
+                                <select [(ngModel)]="newUser.rol" class="mt-1 w-full p-2.5 rounded-xl bg-[#FBF6EC] border" style="border-color: #F3ECDA;">
+                                    <option value="cocina">Cocina (Comandas, POS, Inventario)</option>
+                                    <option value="admin">Administrador</option>
+                                </select>
+                            </label>
+                            <label class="block text-[#4A1A26]">Turno asignado
+                                <select [(ngModel)]="newUser.turno" class="mt-1 w-full p-2.5 rounded-xl bg-[#FBF6EC] border" style="border-color: #F3ECDA;">
+                                    <option *ngFor="let turno of employeeShifts" [value]="turno">{{ turno }}</option>
+                                </select>
+                            </label>
+                        </div>
+                        <button (click)="registrarUsuario()" class="w-full px-5 py-3 bg-[#4A1A26] hover:bg-[#E3632C] text-white rounded-xl text-xs font-black transition">Registrar Usuario</button>
                     </div>
-                    <button (click)="registrarUsuario()" class="px-6 py-2 bg-[#E3632C] hover:bg-[#4A1A26] text-white rounded-full text-xs font-bold">Guardar Personal</button>
-                </div>
 
-                <div class="bg-[#FFFFFF] rounded-2xl border overflow-x-auto max-h-[55vh] overflow-y-auto shadow-sm" style="border-color: #F3ECDA;">
-                    <table class="w-full text-left text-sm">
-                        <thead>
-                            <tr class="bg-[#FBF6EC] text-[10px] font-extrabold uppercase tracking-wider text-slate-500 border-b" style="border-color: #F3ECDA;">
-                                <th class="p-4">Nombre</th>
-                                <th class="p-4">Correo</th>
-                                <th class="p-4">Teléfono</th>
-                                <th class="p-4 text-center">Rol</th>
-                                <th class="p-4 text-right">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y" style="border-color: #F3ECDA;">
-                            <tr *ngFor="let u of users" class="hover:bg-[#FBF6EC]/60">
-                                <td class="p-4 font-bold text-[#4A1A26]">{{ u.nombre }}</td>
-                                <td class="p-4 text-xs">{{ u.correo }}</td>
-                                <td class="p-4 text-xs">{{ u.telefono }}</td>
-                                <td class="p-4 text-center"><span class="px-3 py-1 rounded-full text-xs font-bold bg-[#FCE1D2] text-[#4A1A26]">{{ u.rol }}</span></td>
-                                <td class="p-4 text-right"><button (click)="eliminarUsuario(u)" class="px-3 py-1 rounded-full bg-[#D43F79] text-white text-xs font-bold">Eliminar</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="xl:col-span-2 bg-[#FFFFFF] border p-5 sm:p-6 rounded-2xl shadow-sm min-w-0" style="border-color: #F3ECDA;">
+                        <div class="flex flex-wrap justify-between items-end gap-2 mb-4">
+                            <div>
+                                <h3 class="font-black text-lg text-[#4A1A26]">Equipo de trabajo activo</h3>
+                                <p class="text-xs text-slate-500">{{ users.length }} integrante(s) con acceso</p>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full min-w-[760px] text-left text-xs">
+                                <thead>
+                                    <tr class="bg-[#FBF6EC] text-[10px] font-extrabold uppercase tracking-wider text-slate-500 border-b" style="border-color: #F3ECDA;">
+                                        <th class="p-3">Colaborador</th>
+                                        <th class="p-3">Usuario</th>
+                                        <th class="p-3">Teléfono</th>
+                                        <th class="p-3">Rol</th>
+                                        <th class="p-3">Turno</th>
+                                        <th class="p-3 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y" style="border-color: #F3ECDA;">
+                                    <tr *ngFor="let u of users" class="hover:bg-[#FBF6EC]/60">
+                                        <td class="p-3 font-black text-[#4A1A26]">{{ u.nombre }}</td>
+                                        <td class="p-3 text-slate-500">{{ u.correo }}</td>
+                                        <td class="p-3 text-slate-600">{{ u.telefono || 'Sin teléfono' }}</td>
+                                        <td class="p-3"><span class="px-2.5 py-1 rounded-full text-[10px] font-black" [ngClass]="(u.rol || '').toLowerCase().includes('cocina') ? 'bg-[#FCE1D2] text-[#9A4D00]' : 'bg-[#F3E5FF] text-[#7528A5]'">{{ u.rol }}</span></td>
+                                        <td class="p-3 text-slate-600">{{ u.turno || 'Sin asignar' }}</td>
+                                        <td class="p-3 text-right"><button (click)="eliminarUsuario(u)" class="px-2.5 py-1 rounded-full text-[#D43F79] hover:bg-[#FDECEB] text-[10px] font-black">Dar de baja</button></td>
+                                    </tr>
+                                    <tr *ngIf="users.length === 0">
+                                        <td colspan="6" class="p-8 text-center text-slate-400">Todavía no hay personal registrado.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </section>
 

@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from config import get_db_connection
+import json
 import time
 import re
 
@@ -15,6 +16,8 @@ def _normalizar_estado_pedido(estado_raw: str) -> str:
         return 'En preparación'
     if 'listo' in lower:
         return 'Listo'
+    if lower == 'completado':
+        return 'Completado'
     if 'entreg' in lower or 'complet' in lower:
         return 'Entregado'
     if 'pend' in lower:
@@ -22,6 +25,54 @@ def _normalizar_estado_pedido(estado_raw: str) -> str:
     if 'canc' in lower:
         return 'Cancelado'
     return val
+
+
+def _es_estado_final_pedido(estado: str) -> bool:
+    return (estado or '').strip().lower() in {'entregado', 'entregado al uber'}
+
+
+def _obtener_reserva_producto(cursor, producto_id: int, excluir_pedido_id=None) -> int:
+    sql = """
+        SELECT COALESCE(SUM(d.cantidad), 0) AS reservado
+        FROM pedido_detalles d
+        JOIN pedidos p ON p.id = d.pedido_id
+        WHERE d.producto_id = %s
+          AND p.stock_descontado = 0
+          AND LOWER(p.estado) NOT IN ('entregado', 'entregado al uber', 'cancelado')
+    """
+    params = [producto_id]
+    if excluir_pedido_id is not None:
+        sql += " AND p.id <> %s"
+        params.append(excluir_pedido_id)
+    cursor.execute(sql, tuple(params))
+    return int((cursor.fetchone() or {}).get('reservado') or 0)
+
+
+def _analizar_items_resumen(cursor, resumen: str) -> list:
+    """Compatibilidad para pedidos antiguos que no tienen filas en pedido_detalles."""
+    cursor.execute("SELECT id, nombre FROM productos ORDER BY CHAR_LENGTH(nombre) DESC")
+    productos = cursor.fetchall()
+    items = []
+    ocupados = []
+    for producto in productos:
+        nombre = (producto.get('nombre') or '').strip()
+        if not nombre:
+            continue
+        patron = re.compile(r'(\d+)\s*[x×]\s*' + re.escape(nombre) + r'(?=\s*(?:\(|,|$))', re.IGNORECASE)
+        for match in patron.finditer(resumen or ''):
+            if any(match.start() < fin and match.end() > inicio for inicio, fin in ocupados):
+                continue
+            fin_item = re.search(r',\s*\d+\s*[x×]\s*', (resumen or '')[match.end():])
+            segmento = (resumen or '')[match.end():match.end() + fin_item.start()] if fin_item else (resumen or '')[match.end():]
+            base_match = re.search(r'Base:\s*\[([^\]]*)\]', segmento, re.IGNORECASE)
+            ingredientes = [x.strip() for x in base_match.group(1).split(',') if x.strip()] if base_match else None
+            items.append({
+                'productId': int(producto['id']),
+                'quantity': int(match.group(1)),
+                'ingredients': ingredientes
+            })
+            ocupados.append((match.start(), match.end()))
+    return items
 
 
 def _descontar_stock_materia(cursor, mp_id: int, gramos_usados: float, folio: str):
@@ -330,11 +381,16 @@ def gestionar_pedidos():
                 resumen = (data.get('resumen_articulos') or data.get('itemsText') or '').strip()
                 folio = (data.get('folio') or f"HM-{int(time.time()) % 9000 + 1000}").strip()
                 tipo_pedido = data.get('tipo_pedido') or data.get('type') or 'Al Momento'
-                estado = _normalizar_estado_pedido(data.get('estado') or data.get('status') or 'En preparación')
+                estado = 'En preparación'
                 monto_total = float(data.get('monto_total') or data.get('total') or 0)
                 notas = data.get('notas') or data.get('notes') or ''
                 email_cliente = (data.get('email') or data.get('clientEmail') or '').strip()
                 used_coupon_code = (data.get('usedCouponCode') or '').strip().upper()
+                items = data.get('items') if isinstance(data.get('items'), list) else []
+
+                metodo_pago = re.search(r'Pago:\s*([^|]+)', notas, re.IGNORECASE)
+                if metodo_pago and 'efectivo' in metodo_pago.group(1).lower():
+                    return jsonify({"success": False, "error": "El pago en efectivo ya no está disponible. Elige tarjeta o transferencia."}), 400
 
                 if not resumen or monto_total <= 0:
                     return jsonify({"success": False, "error": "El pedido no tiene platillos o el total es inválido."}), 400
@@ -348,6 +404,62 @@ def gestionar_pedidos():
 
                 if usuario_id is None:
                     return jsonify({"success": False, "error": "Usuario no encontrado para asociar el pedido."}), 400
+
+                if not items:
+                    items = _analizar_items_resumen(cursor, resumen)
+                if not items:
+                    return jsonify({"success": False, "error": "No se pudieron identificar los platillos del pedido."}), 400
+
+                cantidad_por_producto = {}
+                detalles_validados = []
+                for item in items:
+                    try:
+                        producto_id = int(item.get('productId') or item.get('producto_id'))
+                        cantidad = int(item.get('quantity') or item.get('cantidad'))
+                    except (TypeError, ValueError):
+                        return jsonify({"success": False, "error": "El pedido contiene un platillo o cantidad inválidos."}), 400
+                    if cantidad < 1:
+                        return jsonify({"success": False, "error": "La cantidad debe ser al menos 1."}), 400
+                    cursor.execute(
+                        "SELECT id, nombre, stock_porciones, disponible FROM productos WHERE id = %s FOR UPDATE",
+                        (producto_id,)
+                    )
+                    producto = cursor.fetchone()
+                    if not producto or not int(producto.get('disponible') or 0):
+                        return jsonify({"success": False, "error": "Uno de los platillos ya no está disponible."}), 409
+                    reservadas = _obtener_reserva_producto(cursor, producto_id)
+                    cursor.execute("""
+                        SELECT mp.nombre, mp.stock_gramos, rec.gramos_requeridos
+                        FROM recetas rec
+                        JOIN materias_primas mp ON mp.id = rec.materia_prima_id
+                        WHERE rec.producto_id = %s
+                        FOR UPDATE
+                    """, (producto_id,))
+                    receta = cursor.fetchall()
+                    stock_por_receta = None
+                    if receta:
+                        capacidades = []
+                        for ingrediente in receta:
+                            requerido = float(ingrediente.get('gramos_requeridos') or 0)
+                            stock_gramos = float(ingrediente.get('stock_gramos') or 0)
+                            capacidades.append(int(stock_gramos // requerido) if requerido > 0 else 0)
+                        stock_por_receta = min(capacidades) if capacidades else 0
+                    stock_producto = int(producto.get('stock_porciones') or 0)
+                    stock_base = stock_por_receta if stock_por_receta is not None else stock_producto
+                    disponibles = max(0, stock_base - reservadas)
+                    acumulada = cantidad_por_producto.get(producto_id, 0) + cantidad
+                    if acumulada > disponibles:
+                        return jsonify({
+                            "success": False,
+                            "error": f"No hay stock suficiente de {producto['nombre']}. Quedan {disponibles}; reduce la cantidad."
+                        }), 409
+                    ingredients = item.get('ingredients') if isinstance(item.get('ingredients'), list) else None
+                    cantidad_por_producto[producto_id] = acumulada
+                    detalles_validados.append({
+                        'productId': producto_id,
+                        'quantity': cantidad,
+                        'ingredients': ingredients
+                    })
 
                 if used_coupon_code:
                     _asegurar_tabla_cupones_canjeados(cursor)
@@ -365,6 +477,12 @@ def gestionar_pedidos():
                 )
                 pedido_id = cursor.lastrowid
 
+                for detalle in detalles_validados:
+                    cursor.execute(
+                        "INSERT INTO pedido_detalles (pedido_id, producto_id, cantidad, ingredientes) VALUES (%s, %s, %s, %s)",
+                        (pedido_id, detalle['productId'], detalle['quantity'], json.dumps(detalle['ingredients'], ensure_ascii=False) if detalle['ingredients'] is not None else None)
+                    )
+
                 if used_coupon_code:
                     cursor.execute(
                         """INSERT IGNORE INTO cupones_canjeados (correo, codigo)
@@ -372,49 +490,8 @@ def gestionar_pedidos():
                         (email_cliente.lower(), used_coupon_code)
                     )
 
-                cursor.execute("SELECT id, nombre, stock_porciones FROM productos")
-                todos_productos = cursor.fetchall()
-                descontado = False
-
-                base_match = re.search(r'Base:\s*\[([^\]]*)\]', resumen, re.IGNORECASE)
-                base_seleccionada = (
-                    [x.strip().lower() for x in base_match.group(1).split(',') if x.strip()]
-                    if base_match else None
-                )
-
-                for prod in todos_productos:
-                    nombre_prod = (prod.get('nombre') or '').lower()
-                    if nombre_prod and nombre_prod in resumen.lower():
-                        descontado = True
-                        nuevo_stock_prod = max(0, int(prod.get('stock_porciones') or 0) - 1)
-                        cursor.execute("UPDATE productos SET stock_porciones = %s WHERE id = %s", (nuevo_stock_prod, prod['id']))
-
-                        cursor.execute("""
-                            SELECT r.materia_prima_id, r.gramos_requeridos, mp.nombre
-                            FROM recetas r
-                            JOIN materias_primas mp ON r.materia_prima_id = mp.id
-                            WHERE r.producto_id = %s
-                        """, (prod['id'],))
-                        for rec in cursor.fetchall():
-                            nombre_mp = (rec.get('nombre') or '').strip().lower()
-                            if base_seleccionada is not None and nombre_mp:
-                                if not any(nombre_mp in b or b in nombre_mp for b in base_seleccionada):
-                                    continue
-                            _descontar_stock_materia(
-                                cursor,
-                                int(rec['materia_prima_id']),
-                                float(rec['gramos_requeridos'] or 80),
-                                folio
-                            )
-
-                if not descontado:
-                    cursor.execute("SELECT id FROM materias_primas ORDER BY id ASC LIMIT 2")
-                    mps = cursor.fetchall()
-                    for mp in mps:
-                        _descontar_stock_materia(cursor, int(mp['id']), 100, folio)
-
                 connection.commit()
-                return jsonify({"success": True, "id": pedido_id, "folio": folio, "message": "Orden registrada"})
+                return jsonify({"success": True, "id": pedido_id, "folio": folio, "message": "Orden registrada; el inventario se descontará al entregar"})
     except Exception as e:
         if connection:
             try:
@@ -448,7 +525,7 @@ def obtener_cupones_cliente():
                     FROM pedidos p
                     JOIN usuarios u ON p.usuario_id = u.id
                     WHERE LOWER(u.correo) = LOWER(%s)
-                      AND (LOWER(p.estado) LIKE '%%entreg%%' OR LOWER(p.estado) LIKE '%%complet%%')
+                      AND LOWER(p.estado) LIKE '%%entreg%%'
                 """, (email,))
                 row = cursor.fetchone()
                 completados = int(row.get('total') or 0) if row else 0

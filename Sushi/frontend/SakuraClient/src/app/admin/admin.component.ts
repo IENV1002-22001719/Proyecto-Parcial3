@@ -59,22 +59,19 @@ export class AdminComponent implements OnInit {
   restockForm: {
     proveedor_id: number | null;
     estado: string;
-    precioGeneralManual: number | null;
     seleccionados: { [materiaId: number]: boolean };
     cantidades: { [materiaId: number]: number };
-    unidades: { [materiaId: number]: 'pieza' | 'gramos' | 'kg' };
-    preciosUnitarios: { [materiaId: number]: number };
+    unidades: { [materiaId: number]: string };
   } = {
     proveedor_id: null,
     estado: 'Pendiente',
-    precioGeneralManual: null,
     seleccionados: {},
     cantidades: {},
-    unidades: {},
-    preciosUnitarios: {}
+    unidades: {}
   };
 
-  newUser = { nombre: '', apellido: '', correo: '', telefono: '', direccion: '', rol: 'admin' };
+  newUser = { nombre: '', apellido: '', correo: '', telefono: '', direccion: '', rol: 'cocina', turno: 'Matutino' };
+  employeeShifts = ['Matutino', 'Vespertino', 'Mixto'];
   newClient = { nombre: '', apellido: '', correo: '', telefono: '', direccion: '', nivel_vip: 'Bronce' };
 
   showModal = false;
@@ -103,7 +100,13 @@ export class AdminComponent implements OnInit {
       .then(res => res.json())
       .then(data => {
         if (data && data.success) {
-          this.rawMaterials = data.rawMaterials || [];
+          this.rawMaterials = (data.rawMaterials || []).map((m: any) => ({
+            ...m,
+            stock: Number(m.stock) || 0,
+            stock_minimo: Number(m.stock_minimo) || 0,
+            faltante_produccion_gramos: Number(m.faltante_produccion_gramos) || 0,
+            productos_afectados: m.productos_afectados || []
+          }));
           this.products = data.products || [];
           this.orders = data.orders || [];
           this.users = data.users || [];
@@ -145,8 +148,10 @@ export class AdminComponent implements OnInit {
     this.cargarDatosAdmin();
   }
 
-  abrirModalNuevoInsumo() {
-    if (!this.newIng.proveedor_id && this.providers.length > 0) {
+  abrirModalNuevoInsumo(proveedorId?: number) {
+    if (proveedorId) {
+      this.newIng.proveedor_id = Number(proveedorId);
+    } else if (!this.newIng.proveedor_id && this.providers.length > 0) {
       this.newIng.proveedor_id = Number(this.providers[0].id);
     }
     this.showNewIngredientBox = !this.showNewIngredientBox;
@@ -348,11 +353,68 @@ export class AdminComponent implements OnInit {
       .catch(err => this.triggerToast(err.message));
   }
 
-  convertirAGramos(cantidad: number, unidad: string): number {
+  convertirAGramos(cantidad: number, unidad: string, material?: any): number {
     const u = (unidad || 'gramos').toLowerCase();
-    if (u === 'kg') return cantidad * 1000;
-    if (u === 'pieza') return cantidad * 100;
+    if (u === 'kg' || u === 'litro' || u === 'litros') return cantidad * 1000;
+    if (['pieza', 'piezas', 'paquete', 'paquetes', 'costal', 'costales'].includes(u)) {
+      const gramosUnidad = Number(material?.peso_unitario_kg || 0) * 1000;
+      return cantidad * (gramosUnidad > 0 ? gramosUnidad : 100);
+    }
     return cantidad;
+  }
+
+  formatoStockConEquivalencia(material: any, gramos: number): string {
+    const cantidad = Number(gramos || 0);
+    const nombre = String(material?.name || material?.nombre || '');
+    const pesoPresentacion = Number(material?.peso_unitario_kg || 0) * 1000;
+    const hojas = nombre.match(/paquete\s*(\d+)\s*hojas/i);
+    if (hojas && pesoPresentacion > 0) {
+      const disponibles = Math.floor((cantidad / pesoPresentacion) * Number(hojas[1]));
+      return `${this.formatearCantidad(cantidad)} g (${disponibles} hojas)`;
+    }
+
+    const presentacion = this.obtenerPresentacionCompra(material);
+    if (pesoPresentacion > 0 && presentacion) {
+      const equivalencia = cantidad / pesoPresentacion;
+      return `${this.formatearCantidad(cantidad)} g (${this.formatearCantidad(equivalencia)} ${this.etiquetaUnidadCompra(material, equivalencia)})`;
+    }
+    return `${this.formatearCantidad(cantidad)} g`;
+  }
+
+  private formatearCantidad(valor: number): string {
+    return new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 }).format(Number(valor || 0));
+  }
+
+  obtenerPresentacionCompra(material: any): string {
+    const nombre = String(material?.name || material?.nombre || '');
+    const hojas = nombre.match(/paquete\s*(\d+)\s*hojas/i);
+    if (hojas) return `Paquete de ${hojas[1]} hojas`;
+    const unidad = String(material?.unit || '').toLowerCase();
+    if (unidad.includes('costal')) return `Costal de ${this.formatearCantidad(Number(material?.peso_unitario_kg || 25))} kg`;
+    if (unidad.includes('litro')) return 'Litro';
+    if (unidad.includes('kg') || unidad.includes('kilo')) return 'Kg';
+    if (unidad.includes('piez') || unidad.includes('unidad')) return 'Pieza';
+    return 'Gramo';
+  }
+
+  etiquetaUnidadCompra(material: any, cantidad = 2): string {
+    const presentacion = this.obtenerPresentacionCompra(material);
+    if (/^Paquete/i.test(presentacion)) return cantidad === 1 ? 'paquete' : 'paquetes';
+    if (/^Costal/i.test(presentacion)) return cantidad === 1 ? 'costal' : 'costales';
+    if (/^Litro/i.test(presentacion)) return cantidad === 1 ? 'litro' : 'litros';
+    if (/^Kg/i.test(presentacion)) return 'kg';
+    if (/^Pieza/i.test(presentacion)) return cantidad === 1 ? 'pieza' : 'piezas';
+    return cantidad === 1 ? 'gramo' : 'gramos';
+  }
+
+  private unidadCompra(material: any): string {
+    const presentation = this.obtenerPresentacionCompra(material).toLowerCase();
+    if (presentation.startsWith('paquete')) return 'paquete';
+    if (presentation.startsWith('costal')) return 'costal';
+    if (presentation.startsWith('litro')) return 'litro';
+    if (presentation === 'kg') return 'kg';
+    if (presentation === 'pieza') return 'pieza';
+    return 'gramos';
   }
 
   abrirReabastecimiento(proveedorId?: number) {
@@ -363,19 +425,38 @@ export class AdminComponent implements OnInit {
     this.restockForm = {
       proveedor_id: proveedorId || (this.providers.length > 0 ? Number(this.providers[0].id) : null),
       estado: 'Pendiente',
-      precioGeneralManual: null,
       seleccionados: {},
       cantidades: {},
-      unidades: {},
-      preciosUnitarios: {}
+      unidades: {}
     };
 
     this.rawMaterials.forEach(m => {
       this.restockForm.seleccionados[m.id] = false;
-      this.restockForm.cantidades[m.id] = 2;
-      this.restockForm.unidades[m.id] = 'kg';
-      this.restockForm.preciosUnitarios[m.id] = Number(m.costo || 100);
+      const unidad = this.unidadCompra(m);
+      const faltante = Math.max(
+        Number(m.faltante_produccion_gramos || 0),
+        Number(m.stock_minimo || 0) - Number(m.stock || 0),
+        0
+      );
+      const gramosPorUnidad = this.convertirAGramos(1, unidad, m);
+      this.restockForm.cantidades[m.id] = faltante > 0 ? Math.max(1, Math.ceil(faltante / gramosPorUnidad)) : 2;
+      this.restockForm.unidades[m.id] = unidad;
     });
+  }
+
+  abrirReabastecimientoParaInsumo(material: any) {
+    const proveedorId = Number(material?.proveedor_id);
+    if (!proveedorId) {
+      this.triggerToast('Este insumo no tiene un proveedor asignado.');
+      return;
+    }
+    this.adminSection = 'inventario';
+    this.abrirReabastecimiento(proveedorId);
+    this.restockForm.seleccionados[Number(material.id)] = true;
+  }
+
+  alCambiarProveedorReabastecimiento() {
+    this.restockForm.seleccionados = {};
   }
 
   getInsumosParaReabastecer() {
@@ -385,14 +466,11 @@ export class AdminComponent implements OnInit {
 
   calcularSubtotalItem(m: any): number {
     const cant = Number(this.restockForm.cantidades[m.id] || 0);
-    const precioUnit = Number(this.restockForm.preciosUnitarios[m.id] || 0);
+    const precioUnit = Number(m.costo || 0);
     return Math.round(cant * precioUnit * 100) / 100;
   }
 
   calcularPrecioGeneral(): number {
-    if (this.restockForm.precioGeneralManual !== null && this.restockForm.precioGeneralManual !== undefined && Number(this.restockForm.precioGeneralManual) > 0) {
-      return Number(this.restockForm.precioGeneralManual);
-    }
     const candidatos = this.getInsumosParaReabastecer();
     const suma = candidatos
       .filter(m => this.restockForm.seleccionados[m.id])
@@ -411,8 +489,8 @@ export class AdminComponent implements OnInit {
       .filter(m => this.restockForm.seleccionados[m.id] && Number(this.restockForm.cantidades[m.id]) > 0)
       .map(m => {
         const cantidad = Number(this.restockForm.cantidades[m.id]);
-        const unidad = this.restockForm.unidades[m.id] || 'kg';
-        const gramos = this.convertirAGramos(cantidad, unidad);
+        const unidad = this.restockForm.unidades[m.id] || this.unidadCompra(m);
+        const gramos = this.convertirAGramos(cantidad, unidad, m);
         const subtotal = this.calcularSubtotalItem(m);
         return {
           materia_prima_id: m.id,
@@ -551,8 +629,9 @@ export class AdminComponent implements OnInit {
   }
 
   registrarUsuario() {
-    if (!this.newUser.nombre || !this.newUser.correo) {
-      this.triggerToast('Ingresa nombre y correo.');
+    const telefono = String(this.newUser.telefono || '').replace(/\D/g, '');
+    if (!this.newUser.nombre.trim() || !this.newUser.correo.trim() || telefono.length !== 10) {
+      this.triggerToast('Ingresa nombre, correo y un teléfono de 10 dígitos.');
       return;
     }
     fetch('http://localhost:5000/api/usuarios', {
@@ -564,7 +643,7 @@ export class AdminComponent implements OnInit {
       .then(data => {
         if (data.success) {
           this.triggerToast('Personal registrado.');
-          this.newUser = { nombre: '', apellido: '', correo: '', telefono: '', direccion: '', rol: 'admin' };
+          this.newUser = { nombre: '', apellido: '', correo: '', telefono: '', direccion: '', rol: 'cocina', turno: 'Matutino' };
           this.refrescarTodo();
         }
       });
@@ -1039,7 +1118,7 @@ export class AdminComponent implements OnInit {
 
   getStockHealthMetrics() {
     const total = (this.rawMaterials || []).length;
-    const criticos = (this.rawMaterials || []).filter(m => Number(m.stock) <= Number(m.stock_minimo)).length;
+    const criticos = (this.rawMaterials || []).filter(m => Number(m.stock) <= Number(m.stock_minimo) || Number(m.faltante_produccion_gramos || 0) > 0).length;
     const optimos = Math.max(0, total - criticos);
     return {
       total,
@@ -1047,6 +1126,19 @@ export class AdminComponent implements OnInit {
       optimos,
       pctOptimo: total > 0 ? Math.round((optimos / total) * 100) : 100
     };
+  }
+
+  getStockNeedsRestock(): any[] {
+    const materials = this.rawMaterials || [];
+    const low = materials.filter((m: any) => Number(m.stock || 0) <= Number(m.stock_minimo || 0));
+    const recipeWarnings = materials.filter((m: any) => Number(m.faltante_produccion_gramos || 0) > 0);
+    return [...new Map([...low, ...recipeWarnings].map((m: any) => [Number(m.id), m])).values()];
+  }
+
+  getPendingPurchaseOrders(): number {
+    return (this.purchaseOrders || []).filter((order: any) =>
+      String(order.estado || '').toLowerCase() !== 'entregado'
+    ).length;
   }
 
   triggerToast(msg: string) {
